@@ -1,26 +1,23 @@
-# Simulator to generate training set
+# Company Churn Risk Scoring Component
 
-This simple Python code can be used to generate random data of companies within industries with revenue and number of employees and generate churn or not label.
+The goal of this service is to compute a risk factor for a company to leave a SaaS offering. The scoring takes into account the industry type, the company size in term of revenue and number of employees, and then specifics features from the SaaS business model. In our case we will take a company doing big data job management so we can add 
+ variables: number of jobs in last 30 days, and 90 days, monthly  charge, total charge, number of time tutorials were done so far cross all users.    
 
-## Run the simulator
+## The solution architecture
 
-```sh
-# Start the docker enviroment for python 3.9 or 3.10 from the Dockerfile in 
-docker run --rm  --name pythonapp -v $(pwd):/app -v ~/.aws:/root/.aws -it  -p 5000:5000 jbcodeforce/aws-python bash
-# In the shell go to /app and do
-python CompanyDataGenerator.py companies.csv --nb_records 100000
-```
+The following diagram illustrates the components involved in this demonstration:
 
-## Code explanations
+![](../docs/diagrams/solution-comp-view.drawio.png)
 
-* Use argparser to define the argument for the command line
-* Generate nb_records row: company has unique id, industry is selected randomly, revenue and number of employee is linked to the revenue.
-* Churn flag is set to 1 if revenue is low
-* Use `csv` library to write the csv file
 
-### Run the program
+## Simulator to generate training set
 
-1. Be sure to have last aws CLI and python library using the docker image if not rebuild the image from [aws-studies labs folder](https://github.com/jbcodeforce/aws-studies/tree/main/labs)
+This simple Python program may be used to generate random data of companies within industries with revenue and number of employees, # of jobs submitted the last 30 days, 90 days, current monthly fees and accumulated fees. 
+
+### Run the simulator
+
+
+1. Be sure to have last aws CLI and python library using the docker image. If not rebuild the image from [aws-studies labs folder](https://github.com/jbcodeforce/aws-studies/tree/main/labs)
 
     ```sh
     docker build -f https://raw.githubusercontent.com/jbcodeforce/aws-studies/main/labs/Dockerfile -t jbcodeforce/aws-python .
@@ -35,10 +32,20 @@ python CompanyDataGenerator.py companies.csv --nb_records 100000
 1. Run the data generator
 
     ```sh
-    python CompanyDataGenerator.py companies.csv --nb_records 100000
+    python CompanyDataGenerator.py companies.csv --nb_records 10000
     ```
 
-## Upload generated file to S3
+    This should create `companies.csv` file with 10,000 rows
+
+### Code explanations
+
+* Use argparser to define the argument for the command line
+* Generate nb_records row: company has unique id, industry is selected randomly, revenue and number of employee is linked to the revenue.
+* Churn flag is set to 1 if revenue is low
+* Use `csv` library to write the csv file
+
+
+## Upload generated files to S3
 
 ### Pre-requisites
 
@@ -48,29 +55,31 @@ python CompanyDataGenerator.py companies.csv --nb_records 100000
 
 1. Get Access Key and Secret key and configuge aws, we specific profile: `aws configure --profile s3admin`
 
-1. Verify you can access s3 using: `aws s3 ls`
-1. Be sure to have last aws CLI and python library using the docker image if not rebuild the image from [aws-studies labs folder](https://github.com/jbcodeforce/aws-studies/tree/main/labs)
+1. Verify you can access s3 using: `aws s3 ls`. Use the command:
 
     ```sh
-    docker build -f https://raw.githubusercontent.com/jbcodeforce/aws-studies/main/labs/Dockerfile -t jbcodeforce/aws-python .
+    aws s3 cp $PWD/companies.csv s3://jb-data-set/churn/companies.csv  --profile s3admin
     ```
 
-### Execute
-
-1. Start the Python 3 environment using docker
+1. [Alternative] Start the Python 3 environment using docker
 
     ```sh
     docker run --rm  --name pythonapp -v $(pwd):/app -v ~/.aws:/root/.aws -it  -p 5000:5000 jbcodeforce/aws-python bash
     ```
 
-1. Using the python code and boto3 library do the following:
+    * Using the python code and boto3 library do the following:
 
     ```sh
-    python copyToS3.py us-west-2 jb-data-set $PWD/companies.csv 
+    python copyToS3.py us-west-2 jb-data-set churn $PWD/companies.csv 
     ```
 
-If some libraries are not installed do `pip install -r requirements.txt`
+    * If some libraries are not installed do `pip install -r requirements.txt`
 
 
-## Develop a Random Forest model using SageMaker
+## Develop a model using SKlearn and SageMaker
 
+We can use two approaches to train the model, one based on Notebook inside SageMaker and one using SDK from your local machine.
+
+### Notebook approach
+
+1. Start a notebook in SageMaker Studio and import the following ipynb file.

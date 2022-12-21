@@ -8,6 +8,7 @@ AWS_SECRET_ACCESS_KEY=os.environ.get("AWS_SECRET_ACCESS_KEY")
 parser = argparse.ArgumentParser()
 parser.add_argument("region", help="Must specify the AWS region for S3")
 parser.add_argument("bucket", help="Must specify a S3 bucket name to upload files to")
+parser.add_argument("prefix", help="prefix to be added as S3 path from bucket")
 parser.add_argument("filename", help="Must specify a file name to upload")
 args = parser.parse_args()
 
@@ -26,8 +27,8 @@ except ClientError:
 
 bucket = s3.Bucket(args.bucket)
     
-object_name = os.path.basename(args.filename)
-
+object_name = os.path.join(args.prefix,os.path.basename(args.filename))
+print(object_name)
 bucket.upload_file(args.filename, object_name)
 
 
