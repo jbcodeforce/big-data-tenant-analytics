@@ -66,7 +66,7 @@ If you want to re-run the simulator you can do the following steps.
 
 1. Be sure to have an IAM role with S3FullAccess
 
-    ![](../docs/images/s3-policy.png)
+    ![](./images/s3-policy.png)
 
 1. Get Access Key and Secret key and configuge aws, we specific profile: `aws configure --profile s3admin`
 
