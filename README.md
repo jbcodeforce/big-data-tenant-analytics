@@ -1,47 +1,29 @@
-# Big Data Example
+# [Big Data Demonstration](https://jbcodeforce.github.io/big-data-tenant-analytics)
 
-As an ISV delivering Big Data platform for their on-premises customers, AnyCompany wants to move to a SaaS model. They designed a new architecture with multi-tenant support. The new SaaS platform includes a set of microservices to register tenant, to manage account, billing, and specific components which support data catalog, and coordinate big data batch execution. 
+Read from [book view](https://jbcodeforce.github.io/big-data-tenant-analytics)
 
-All those components are generating data, and we want to propose to extend their SaaS architecture to leverage AWS services such as Kinesis, SageMaker, Quicksight to monitor their users activities and assess risk of churn. 
+## Building this booklet locally
 
-## Goal
+The content of this repository is written with markdown files, packaged with [MkDocs](https://www.mkdocs.org/) and can be built into a book-readable format by MkDocs build processes.
 
-The following business questions may be answered by using the new platform:
+1. Install MkDocs locally following the [official documentation instructions](https://www.mkdocs.org/#installation).
+1. Install Material plugin for mkdocs:  `pip install mkdocs-material` 
+2. `git clone https://github.com/jbcodeforce/big-data-tenant-analytics.git` _(or your forked repository if you plan to edit)_
+3. `cd big-data-tenant-analytics`
+4. `mkdocs serve`
+5. Go to `http://127.0.0.1:8000/` in your browser.
 
-* how often tenant login, and work on data lake and then submit jobs
-* which customers are not doing a lot of activities after logging
-* what is the size of their data set
-* how many batches are run per customer, per day
-* can we identify the customers doing very minimum
+### Building this booklet locally but with docker
 
-## Scope
+In some cases you might not want to alter your Python setup and rather go with a docker image instead. This requires docker is running locally on your computer though.
 
-* build a simulator to generate clickstreams data: all those data elements have a timestamp
-    * account created: company name and industry, sentiment about the company
-    * user added, user deleted
-    * user login, user logoff, user session timeoff
-    * jobSubmitted, jobTerminated, jobCancelled
+* docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
+* Go to http://127.0.0.1:8000/ in your browser.
 
+### Pushing the book to GitHub Pages
 
-* Data elements to consider: number of server, data size
-* Concentrates those events into kinesis streams: tenants, users, jobs
-* Keep data for 7 days
-* Move data for long term persistence to S3, bucket per tenant/user
-* Use Sagemaker to develop a decision tree or random forest model to score risk of customer churn. The training set will be created by simulator so we can build a decision tree
-* Deploy the model as sagemaker hosted service and integrate it into an agent that listening to events from jobs, users, tenant topics and score the risk of churn. Implement a Kinesis streams analytics with the logic of 
-* Represent some metrics with QuickSight:
-    * tenants, # of users
-    * for a given tenant user activities over time
-    * job submitted, cancelled, over time per tenant
-    * last activity date per tenant
+1. Ensure that all your local changes to the `master` branch have been committed and pushed to the remote repository. `git push origin code`
+1. Run `mkdocs gh-deploy --remote-branch master` from the root directory.
 
+--- 
 
-## Run in development mode
-
-```shell
-docker run --rm  --name pythonapp -v $(pwd):/app -it  -p 5000:5000 jbcodeforce/aws-python bash 
-pipenv shell
-pipenv lock
-pipenv install --dev
-```
-Then use python shell: `python app.py` and point to http://localhost:5000 to get the API

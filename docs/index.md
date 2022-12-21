@@ -1,4 +1,4 @@
-# Big Data SaaS management
+# Big Data SaaS Management Demonstration
 
 As an ISV delivering Big Data platform for their on-premises customers, AnyCompany wants to move to a SaaS model. They designed a new architecture with multi-tenant support. They selected a bridge pattern to support their different customer's requirements:
 
