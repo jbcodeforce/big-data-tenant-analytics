@@ -1,5 +1,5 @@
 site_name: SaaS Big Data Demo
-repo_url: https://github.com/jbcodeforce/aws-studies.git
+repo_url: https://github.com/jbcodeforce/big-data-tenant-analytics.git
 nav:
   - Introduction: index.md
   - Architecture: design.md
