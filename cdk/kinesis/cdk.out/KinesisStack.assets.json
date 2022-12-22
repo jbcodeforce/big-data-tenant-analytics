@@ -1,7 +1,7 @@
 {
   "version": "22.0.0",
   "files": {
-    "1a4fb0d25e723c402053e149faaaafd61c3507088954972d4c7c602bb35d80bd": {
+    "7bfdebc73b6f9430c6fe7c5306c6aacd6e34fef51c36400317073f515d3934d1": {
       "source": {
         "path": "KinesisStack.template.json",
         "packaging": "file"
@@ -9,7 +9,7 @@
       "destinations": {
         "current_account-current_region": {
           "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}",
-          "objectKey": "1a4fb0d25e723c402053e149faaaafd61c3507088954972d4c7c602bb35d80bd.json",
+          "objectKey": "7bfdebc73b6f9430c6fe7c5306c6aacd6e34fef51c36400317073f515d3934d1.json",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-${AWS::Region}"
         }
       }

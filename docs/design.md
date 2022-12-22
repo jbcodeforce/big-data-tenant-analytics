@@ -37,6 +37,7 @@ This is a managed service for pub/sub streaming data. It is a distributed data s
 
 
 ### Deployment
+
 The CDK app under `cdk/kinesis` folder defines the following components:
 
 
@@ -110,3 +111,43 @@ As Apache Flink is an open-source project, it is possible to deploy it in a Kube
 While Kinesis Data Analytics helps you to focus on the application logic, which is not simple programming experience, as stateful processing is challenginf, there is no management of infrastructure, monitoring, auto scaling and high availability integrated in the service.
 
 In addition to the AWS integrations, the Kinesis Data Analytics libraries include more than 10 Apache Flink connectors and the ability to build custom integrations. 
+
+### Implementation details
+
+
+Joins between company and job streams on the company ID and add the number of jobs run (from job event) to the company current jobs count.
+
+    * Company event is a csv with: company_id, industry, revenu, employees, job30, job90, monthlyFee, totalFee
+    * Job is: company_id, userid , #job_submitted
+    * Out come is : company_id, industry, revenu, employees, job30 + #job_submitted, job90 + #job_submitted, monthlyFee, totalFee
+
+
+kinesis-analytics-JobProcessing-us-west-2
+
+
+## Business DashBoard with QuickSight
+
+Recall that the goals for this dashboard is to be able to answer to following questions:
+
+* How often tenants work on data lake and then submit jobs?
+* Which customers are not doing a lot of activities after logging?
+* What is the size of their data set?
+* How many batches are run per customer, per day?
+
+### Build the dashboard
+
+* Start QuickSight
+* Modify policy so QuickSight can access the bucket where Stream Analytics output its job's outcome.
+* Define a manifest file for accessing the S3 bucket and folders (See [these manifests](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/qs-dashboard) as source).
+
+    * The files need to have the same structure
+    If the upload of the manifest fails with a criptic message, [see this note](https://docs.aws.amazon.com/quicksight/latest/user/troubleshoot-connect-S3.html)
+
+* Create a Dataset from S3 bucket customer file and one Dataset for jobs file
+* Change the Type of Date from String to Date
+* Add one Analysis and be sure to add the second dataset.
+* Add visualization
+
+![](./images/qs-dashboard.png)
+
+[Dashboard Link](https://us-west-2.quicksight.aws.amazon.com/sn/dashboards/1f7b933a-294e-4583-9ca4-a9fbabf5956a/sheets/1f7b933a-294e-4583-9ca4-a9fbabf5956a_aed7d0fd-c324-4f3b-87d9-97c8fa15a69c)

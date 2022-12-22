@@ -1,9 +1,9 @@
 {
  "Resources": {
-  "SaaSdemoStream7ADCE90D": {
+  "KinesisStreamJobsD524E7EF": {
    "Type": "AWS::Kinesis::Stream",
    "Properties": {
-    "Name": "bg-jobs",
+    "Name": "bigdatajobs",
     "RetentionPeriodHours": 24,
     "ShardCount": 1,
     "StreamEncryption": {
@@ -23,7 +23,33 @@
     }
    },
    "Metadata": {
-    "aws:cdk:path": "KinesisStack/SaaSdemoStream/Resource"
+    "aws:cdk:path": "KinesisStack/KinesisStreamJobs/Resource"
+   }
+  },
+  "KinesisStreamCompanies2971BC11": {
+   "Type": "AWS::Kinesis::Stream",
+   "Properties": {
+    "Name": "companies",
+    "RetentionPeriodHours": 24,
+    "ShardCount": 1,
+    "StreamEncryption": {
+     "Fn::If": [
+      "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+      {
+       "Ref": "AWS::NoValue"
+      },
+      {
+       "EncryptionType": "KMS",
+       "KeyId": "alias/aws/kinesis"
+      }
+     ]
+    },
+    "StreamModeDetails": {
+     "StreamMode": "PROVISIONED"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "KinesisStack/KinesisStreamCompanies/Resource"
    }
   },
   "CDKMetadata": {

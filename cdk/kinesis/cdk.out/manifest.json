@@ -17,7 +17,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-${AWS::Region}",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-${AWS::Region}",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/1a4fb0d25e723c402053e149faaaafd61c3507088954972d4c7c602bb35d80bd.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-${AWS::Region}/7bfdebc73b6f9430c6fe7c5306c6aacd6e34fef51c36400317073f515d3934d1.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -33,16 +33,22 @@
         "KinesisStack.assets"
       ],
       "metadata": {
-        "/KinesisStack/SaaSdemoStream/Resource": [
+        "/KinesisStack/KinesisStreamJobs/Resource": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "SaaSdemoStream7ADCE90D"
+            "data": "KinesisStreamJobsD524E7EF"
           }
         ],
         "/KinesisStack/AwsCdkKinesisEncryptedStreamsUnsupportedRegions": [
           {
             "type": "aws:cdk:logicalId",
             "data": "AwsCdkKinesisEncryptedStreamsUnsupportedRegions"
+          }
+        ],
+        "/KinesisStack/KinesisStreamCompanies/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KinesisStreamCompanies2971BC11"
           }
         ],
         "/KinesisStack/CDKMetadata/Default": [

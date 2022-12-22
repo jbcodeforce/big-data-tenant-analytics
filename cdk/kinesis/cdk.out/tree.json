@@ -8,17 +8,17 @@
         "id": "KinesisStack",
         "path": "KinesisStack",
         "children": {
-          "SaaSdemoStream": {
-            "id": "SaaSdemoStream",
-            "path": "KinesisStack/SaaSdemoStream",
+          "KinesisStreamJobs": {
+            "id": "KinesisStreamJobs",
+            "path": "KinesisStack/KinesisStreamJobs",
             "children": {
               "Resource": {
                 "id": "Resource",
-                "path": "KinesisStack/SaaSdemoStream/Resource",
+                "path": "KinesisStack/KinesisStreamJobs/Resource",
                 "attributes": {
                   "aws:cdk:cloudformation:type": "AWS::Kinesis::Stream",
                   "aws:cdk:cloudformation:props": {
-                    "name": "bg-jobs",
+                    "name": "bigdatajobs",
                     "retentionPeriodHours": 24,
                     "shardCount": 1,
                     "streamEncryption": {
@@ -54,6 +54,47 @@
             "path": "KinesisStack/AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
             "constructInfo": {
               "fqn": "aws-cdk-lib.CfnCondition",
+              "version": "2.55.1"
+            }
+          },
+          "KinesisStreamCompanies": {
+            "id": "KinesisStreamCompanies",
+            "path": "KinesisStack/KinesisStreamCompanies",
+            "children": {
+              "Resource": {
+                "id": "Resource",
+                "path": "KinesisStack/KinesisStreamCompanies/Resource",
+                "attributes": {
+                  "aws:cdk:cloudformation:type": "AWS::Kinesis::Stream",
+                  "aws:cdk:cloudformation:props": {
+                    "name": "companies",
+                    "retentionPeriodHours": 24,
+                    "shardCount": 1,
+                    "streamEncryption": {
+                      "Fn::If": [
+                        "AwsCdkKinesisEncryptedStreamsUnsupportedRegions",
+                        {
+                          "Ref": "AWS::NoValue"
+                        },
+                        {
+                          "EncryptionType": "KMS",
+                          "KeyId": "alias/aws/kinesis"
+                        }
+                      ]
+                    },
+                    "streamModeDetails": {
+                      "streamMode": "PROVISIONED"
+                    }
+                  }
+                },
+                "constructInfo": {
+                  "fqn": "aws-cdk-lib.aws_kinesis.CfnStream",
+                  "version": "2.55.1"
+                }
+              }
+            },
+            "constructInfo": {
+              "fqn": "aws-cdk-lib.aws_kinesis.Stream",
               "version": "2.55.1"
             }
           },
