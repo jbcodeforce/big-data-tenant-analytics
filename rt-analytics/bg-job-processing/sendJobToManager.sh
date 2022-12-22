@@ -1,0 +1,2 @@
+rm $(pwd)/data/output.txt
+docker exec -ti $JMC flink run -d -c $CNAME /home/bg-job-processing/target/bg-job-processing-1.0.0-runner.jar --companies file:///home/bg-job-processing/data/companies.csv --jobs file:///home/bg-job-processing/data/jobs.csv --output file:///home/bg-job-processing/data/output.txt
