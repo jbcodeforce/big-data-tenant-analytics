@@ -125,29 +125,12 @@ Joins between company and job streams on the company ID and add the number of jo
 kinesis-analytics-JobProcessing-us-west-2
 
 
-## Business DashBoard with QuickSight
+## QuickSight Integration Design
 
-Recall that the goals for this dashboard is to be able to answer to following questions:
+The Dashboard is supported by Amazon QuickSight, with the datasets defined for customers and jobs.
 
-* How often tenants work on data lake and then submit jobs?
-* Which customers are not doing a lot of activities after logging?
-* What is the size of their data set?
-* How many batches are run per customer, per day?
+![](./diagrams/qs-arch.drawio.png)
 
-### Build the dashboard
+The data sets are defined from the S3 bucket / files for companies.csv and job.csv that were created by the ingestion layer supported by Kinesis Data Analytics.
 
-* Start QuickSight
-* Modify policy so QuickSight can access the bucket where Stream Analytics output its job's outcome.
-* Define a manifest file for accessing the S3 bucket and folders (See [these manifests](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/qs-dashboard) as source).
-
-    * The files need to have the same structure
-    If the upload of the manifest fails with a criptic message, [see this note](https://docs.aws.amazon.com/quicksight/latest/user/troubleshoot-connect-S3.html)
-
-* Create a Dataset from S3 bucket customer file and one Dataset for jobs file
-* Change the Type of Date from String to Date
-* Add one Analysis and be sure to add the second dataset.
-* Add visualization
-
-![](./images/qs-dashboard.png)
-
-[Dashboard Link](https://us-west-2.quicksight.aws.amazon.com/sn/dashboards/1f7b933a-294e-4583-9ca4-a9fbabf5956a/sheets/1f7b933a-294e-4583-9ca4-a9fbabf5956a_aed7d0fd-c324-4f3b-87d9-97c8fa15a69c)
+A way to deploy [quicksight with cloudFormation](https://devops.learnquicksight.online/quicksight-via-cloudformation.html)

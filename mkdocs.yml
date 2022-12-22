@@ -2,8 +2,10 @@ site_name: SaaS Big Data Demo
 repo_url: https://github.com/jbcodeforce/big-data-tenant-analytics.git
 nav:
   - Introduction: index.md
+  - Business Dashboard: dashboard.md
   - Architecture: design.md
   - ML model: model.md
+  
 theme: 
   name: material
   palette:
