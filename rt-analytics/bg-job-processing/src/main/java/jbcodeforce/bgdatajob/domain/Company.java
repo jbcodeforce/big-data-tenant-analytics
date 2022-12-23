@@ -1,7 +1,7 @@
 package jbcodeforce.bgdatajob.domain;
 
 public class Company {
-    public String company_id;
+    public String companyID;
     public String industry;
     public Integer revenu;
     public Integer employees;
@@ -16,7 +16,7 @@ public class Company {
     }
 
     public String toCSV() {
-        return company_id + "," 
+        return companyID + "," 
               + industry + ","
               + revenu.toString() + ","
               + employees.toString() + ","

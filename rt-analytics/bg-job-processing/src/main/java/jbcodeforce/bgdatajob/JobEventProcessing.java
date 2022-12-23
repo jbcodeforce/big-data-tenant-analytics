@@ -19,7 +19,6 @@ import org.apache.flink.streaming.connectors.kinesis.config.AWSConfigConstants;
 import org.apache.flink.streaming.connectors.kinesis.config.ConsumerConfigConstants;
 
 import com.amazonaws.services.kinesisanalytics.runtime.KinesisAnalyticsRuntime;
-import com.ibm.icu.impl.number.DecimalFormatProperties.ParseMode;
 
 import jbcodeforce.bgdatajob.domain.Company;
 import jbcodeforce.bgdatajob.operators.Sig4SignedHttpRequestAsyncFunction.HttpRequest;
@@ -84,7 +83,7 @@ public class JobEventProcessing {
 
     public static Company getCompanyRecord(String cid) {
         Company c = new Company();
-        c.company_id = cid;
+        c.companyID = cid;
         c.employees = 1000;
         c.industry = "Retail";
         c.job30 = 10;

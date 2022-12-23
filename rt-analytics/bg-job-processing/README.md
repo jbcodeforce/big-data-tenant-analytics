@@ -5,7 +5,7 @@
 * Joins between company and job streams on the company ID and add the number of jobs run (from job event) to the company current jobs count.
 
     * Company event is a csv with: company_id, industry, revenu, employees, job30, job90, monthlyFee, totalFee
-    * Job is: company_id, userid , #job_submitted
+    * Job is: company_id, userid , #job_submitted, timestamp
     * Out come is : company_id, industry, revenu, employees, job30 + #job_submitted, job90 + #job_submitted, monthlyFee, totalFee
 
 ## Packaging
@@ -41,3 +41,10 @@ docker exec -ti $JMC flink run -d -c $CNAME /home/bg-job-processing/target/bg-jo
 # OR
 ./sendJobToManager.sh 
 ```
+
+## Deploy to S3
+
+```sh
+aws s3 cp $(pwd)/target/bg-job-processing-1.0.0-runner.jar s3://jb-data-set/churn/bg-job-processing-1.0.0-runner.jar
+```
+
