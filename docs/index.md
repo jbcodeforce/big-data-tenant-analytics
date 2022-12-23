@@ -36,7 +36,7 @@ The following business questions may be answered by using the new analytics plat
 * How many batches are run per customer, per day?
 * Can we identify the customers doing very minimum?
 
-## Scope
+## Demonstration Scope
 
 From a demonstration point of view, we want to address the data pipeline, the Scoring service integration into real-time event processing, and dashboarding. The following figure illustrates the scope of the demonstration and then the content of this repository.
 
@@ -53,15 +53,19 @@ Those two services run on AWS EKS the Kubernetes managed services. The value of 
 
 ![](./diagrams/eks-ec2.drawio.svg)
 
+**Figure 5: Reference Architecture for EKS deployment**
+
 No need to install, operate and maintain k8s cluster. It automatically scales control plane instances based on load, detects and replaces unhealthy control plane instance. It supports EC2 to deploy worker nodes or Fargate to deploy serverless containers. EKS uses IAM to provide authentication to your Kubernetes cluster, and k8s RBAC for authorization. See [this note]() for details about running the SaaS solution control plane and customer data plane in a multi-tenant way to support the `bridge pattern`.
 
 As en event-driven solution we want to have events ingected to Kinesis Data Streams so we can plug real-time analytics (running in Kinesis Data Analytics) to be able to answer some of the questions asked by the business users.
 
-To prepare the scoring service with SageMaker we will add:
+We will use Infrastructure as Code as much as possible to automate the provisioning of services and resources.
 
-* A simulator to generate company churn data elements to build training data set
-* A SageMaker notebook to do some feature engineering, build the model and deploy the model to SageMaker runtime so the service end point can be called asynchronously from the Kinesis Data Analytics component. For detail on those component read [this note](./model.md)
+### Components list
 
+* **Amazon SageMaker** for scoring risk of churn: The description of the model is in [this note](../model).
+* **Dashboard in Amazon QuickSight**  a simple dashboard to illustrate some of the metrics as defined by the requirements listed above: [See this note](../dashboard)
+* **Real-time analytics** using Kinesis Data Analytics, the details for the implementation and deployment are in [this note]().
 
 ---
 
@@ -82,3 +86,12 @@ To prepare the scoring service with SageMaker we will add:
     * for a given tenant user activities over time
     * job submitted, cancelled, over time per tenant
     * last activity date per tenant
+
+## Deeper Dive
+
+Below are the source of information I used to develop this solution
+
+* [Real Time ML inference on Streaming Data - Lab](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/lab7)
+* [Sagemaker building your own model.](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/lab3)
+* [Streaming Data Solution for Amazon Kinesis](https://github.com/aws-solutions/streaming-data-solution-for-amazon-kinesis-and-amazon-msk)
+* [Kinesis Data Analytics Java Samples](https://github.com/aws-samples/amazon-kinesis-data-analytics-java-examples)

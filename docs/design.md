@@ -1,11 +1,19 @@
 # Architecture and Design
 
+This section addresses major architecture decisions and design choices:
+
 ## Component view
 
-As presented in the introduction we have the following component view in scope for this demonstration:
+As presented in the introduction we have the following components in scope for this demonstration:
 
 ![](./diagrams/solution-comp-view.drawio.png)
 
+**Figure 1: Solution Component View**
+
+* [The Dashboard](./#quicksight-integration-design) to present business insight on the execusion of the SaaS business.
+* [SageMaker to support development of scoring model and runtime exposure](../model).
+* [API Gateway and Lambda](#api-gateway-and-lambda-function-for-sagemaker) to proxy the predictive service.
+* [Real-time data analytics](#kinesis-data-analytics)
 
 ## EKS cluster creation and solution deployment
 
@@ -96,12 +104,13 @@ This is a managed service to transform and analyze streaming data in real time u
 
 The underlying architecture consists of a **Job Manager** and n **Task Managers**. 
 
-The **JobManager** controls the execution of a single application. It receives an application for execution and builds a Task Execution Graph from the defined Job Graph. It manages job submission and the job lifecycle then allocates work to Task Managers
-The **Resource Manager** manages Task Slots and leverages underlying orchestrator, like Kubernetes or Yarn.
-A **Task slot** is the unit of work executed on CPU.
-The **Task Managers** execute the actual stream processing logic. There are multiple task managers running in a cluster. The number of slots limits the number of tasks a TaskManager can execute. After it has been started, a TaskManager registers its slots to the ResourceManager
+* The **JobManager** controls the execution of a single application. It receives an application for execution and builds a Task Execution Graph from the defined Job Graph. It manages job submission and the job lifecycle then allocates work to Task Managers.
+* The **Resource Manager** manages Task Slots and leverages underlying orchestrator, like Kubernetes or Yarn.
+* A **Task slot** is the unit of work executed on CPU.
 
-![](./diagrams/flink-arch.drawio.svg)
+* The **Task Managers** execute the actual stream processing logic. There are multiple task managers running in a cluster. The number of slots limits the number of tasks a TaskManager can execute. After it has been started, a TaskManager registers its slots to the ResourceManager
+
+![](./images/flink-arch.png){ width=600px }
 
 
 ### When to choose what
@@ -112,25 +121,43 @@ While Kinesis Data Analytics helps you to focus on the application logic, which 
 
 In addition to the AWS integrations, the Kinesis Data Analytics libraries include more than 10 Apache Flink connectors and the ability to build custom integrations. 
 
-### Implementation details
+### Implementation Details
 
-
-Joins between company and job streams on the company ID and add the number of jobs run (from job event) to the company current jobs count.
-
-    * Company event is a csv with: company_id, industry, revenu, employees, job30, job90, monthlyFee, totalFee
-    * Job is: company_id, userid , #job_submitted
-    * Out come is : company_id, industry, revenu, employees, job30 + #job_submitted, job90 + #job_submitted, monthlyFee, totalFee
-
-
-kinesis-analytics-JobProcessing-us-west-2
-
+[See this dedicated note](../rt-analytics/)
 
 ## QuickSight Integration Design
 
-The Dashboard is supported by Amazon QuickSight, with the datasets defined for customers and jobs.
+The Dashboard is supported by Amazon QuickSight, which helps us to develop Analysis from different datasources, with drill down capabilities. The datasources are in S3 bucket with files that are continuously updated by the Data Streaming and Analtics components.  
 
 ![](./diagrams/qs-arch.drawio.png)
 
-The data sets are defined from the S3 bucket / files for companies.csv and job.csv that were created by the ingestion layer supported by Kinesis Data Analytics.
+In QuiskSight data sources are mapped to data sets, and we can apply data transformation for a better usage in analysis and visualisation. 
 
-A way to deploy [quicksight with cloudFormation](https://devops.learnquicksight.online/quicksight-via-cloudformation.html)
+Here is an example of User Interface constructs:
+
+![](./images/qs-dashboard.png)
+
+For some implementation details [see this note](../dashboard/).
+
+In the future we can automate the deployment of this dashboard by using CloudFormation. See [this note](https://devops.learnquicksight.online/quicksight-via-cloudformation.html).
+
+## API Gateway And Lambda Function for SageMaker
+
+As introduced in figure 1, API Gateway is deployed to expose REST API, and specially one supported by a Lambda function in backend to proxy SageMaker. The goal here is to add an anti-corruption layer into the domain of data streaming which most of the time represent business events while SageMaker use csv type of input.
+
+There is a cloudFormation template defined in [setup/cloudformation folder](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/cloudformation) named `APIGW-Lambda.yaml` to declare API Gateway, role, and Lambda function. The following command create this stack in the connected Region:
+
+```sh
+aws cloudformation create-stack --stack-name apigw-lambda-sm --template-body file://APIGW-Lambda.yaml --parameters ParameterKey=sagemakerEndpoint,ParameterValue=linear-learner-2022-12-22-23-12-40-646 --capabilities CAPABILITY_NAMED_IAM
+# Result looks like:
+{
+    "StackId": "arn:aws:cloudformation:us-west-2:......:stack/apigw-lambda-sm/5041dce0-.....8258-11ed-8ddc-06ec61b22a8d"
+}
+```
+
+![](./images/cf-apigw-lambda.png)
+
+We can access the Lambda and perform a smoke test to verify we reach the SageMaker endpoint.
+
+![](./images/test-lambda.png)
+

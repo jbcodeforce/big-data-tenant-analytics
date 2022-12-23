@@ -1,4 +1,5 @@
-# Company Churn model development
+# Company Churn assess AI model development with SageMaker
+
 
 The goal of this service is to compute the risk for a customer to leave the SaaS platgorm. The scoring takes into account the industry type, the company size in term of revenue and number of employees, and then specifics features from the SaaS business model. In our case we will take a company doing big data job management so we can add 
  variables: number of jobs in last 30 days, and 90 days, monthly  charge, total charge, number of time tutorials were done so far cross all users.    
@@ -16,11 +17,17 @@ comp_5,finance,83590,20898,5,75,472,3735,0
 comp_6,retail,86080,28693,9,85,824,4475,1
 ```
 
-The following figure illustrates the how to build the model using SageMaker:
+The following figure illustrates how to build the model using Amazon SageMaker (in green the components developed in this solution) using training and test data sets and then deployed model in a scalable runtime:
 
 ![](./diagrams/sagemaker-training.drawio.png)
 
-This repository includes a simulator to generate data, which can be uploaded to S3 via AWS CLI, and a notebook that can be executed in AWS SageMaker Studio to train the model, and deploy the model to SageMaker runtime so it can be called from any clients which has the endpoint information.
+**Figure 1: SageMaker Model Training and Runtime deployment** 
+
+The runtime is exposing an Endpoint that we can access using ASW SDK from a lambda or a microservice. 
+
+To train the model we use a predefined algorithm, packaged as docker image, and available inside SageMaker notebook, via access to Amazon Elastic Container Registry.
+
+This repository includes a [Simulator (CompanyDataGenerator.py)](https://github.com/jbcodeforce/big-data-tenant-analytics/blob/main/CompanyRisk/CompanyDataGenerator.py) to generate data to build training set. The generated records can be uploaded to S3 via AWS CLI. It also includes a [SageMaker notebook (company-churn-sm.ipynb)](https://github.com/jbcodeforce/big-data-tenant-analytics/blob/main/CompanyRisk/company-churn-sm.ipynb) that can be executed in AWS SageMaker Studio to perform some simple feature engineering, train the model, and deploy the model to SageMaker runtime so it can be called from any clients which has the endpoint information.
 
 ## Preparing the data
 
@@ -59,12 +66,11 @@ If you want to re-run the simulator you can do the following steps.
 * Churn flag is set to 1 if revenue is low
 * Use `csv` library to write the csv file
 
-
 ## Upload generated files to S3
 
 ### Pre-requisites
 
-1. Be sure to have an IAM role with S3FullAccess
+1. Be sure to have an IAM role with S3FullAccess. The name of the role is ()
 
     ![](./images/s3-policy.png)
 
@@ -76,7 +82,7 @@ If you want to re-run the simulator you can do the following steps.
     aws s3 cp $PWD/companies.csv s3://jb-data-set/churn/companies.csv  --profile s3admin
     ```
 
-1. [Alternative] Start the Python 3 environment using docker
+1. [Alternate] Start the Python 3 environment using docker
 
     ```sh
     docker run --rm  --name pythonapp -v $(pwd):/app -v ~/.aws:/root/.aws -it  -p 5000:5000 jbcodeforce/aws-python bash
@@ -92,7 +98,7 @@ If you want to re-run the simulator you can do the following steps.
 
 ## Build and deploy the model with AWS SageMaker
 
-The goal of this section is to build the churn predictive scoring model. The steps are simple:
+The goal of this section is to build the churn predictive scoring model within SageMaker. The steps are simple:
 
 1. Create or use your SageMaker Studio, [here are  workshop instructions](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/prerequisites/option2) to do so.
 1. Be sure to have an IAM role for SageMaker to access remote services like S3. 
@@ -177,3 +183,22 @@ linear.set_hyperparameters(
 )
 linear.fit(inputs={"train": train_data, "validation": validation_data}, job_name=job_name)
 ```
+
+* Deploy the model with the command
+
+```python
+linear_predictor = linear.deploy(initial_instance_count=1, instance_type="ml.c4.xlarge")
+print(f"\ncreated endpoint: {linear_predictor.endpoint_name}")
+```
+
+* We can try some prediction in the notebook
+
+```python
+payload="19100,9550,6,39,227,810,0,0,0,0,0,0,1,0,0"
+result=linear_predictor.predict(payload)
+print(result)
+```
+
+Or using a python client, you can run inside a EC2 or on your computerm see code [CompanyRisk/CallSageMakerRunTime.py](https://github.com/jbcodeforce/big-data-tenant-analytics/blob/main/CompanyRisk/CallSageMakerRunTime.py), be sure to set the ENDPOINT to the SageMaker endpoint name. 
+
+The URL is not public, but could also being accessed via an HTTP POST from an EC2 in the same VPC.

@@ -3,8 +3,9 @@ repo_url: https://github.com/jbcodeforce/big-data-tenant-analytics.git
 nav:
   - Introduction: index.md
   - Business Dashboard: dashboard.md
-  - Architecture: design.md
+  - Architecture & Design: design.md
   - ML model: model.md
+  - RT Analytics: rt-analytics.md
   
 theme: 
   name: material
