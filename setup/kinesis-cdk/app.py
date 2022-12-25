@@ -22,6 +22,12 @@ class KinesisStack(Stack):
             shard_count=1,
             retention_period=Duration.hours(24)
         )
+        
+        kinesis.Stream(self, "KinesisStreamEnrichedCompanies",
+            stream_name="enrichedcompanies",
+            shard_count=1,
+            retention_period=Duration.hours(24)
+        )
 
         # kinesisanalytics.Application(self,"Analytics")
 

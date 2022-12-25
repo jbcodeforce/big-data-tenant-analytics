@@ -1,0 +1,12 @@
+{
+    "ApplicationName": "CompanyJobProcessing",
+    
+    "RunConfiguration": {
+        "FlinkRunConfiguration": {
+            "AllowNonRestoredState": false
+          },
+        "ApplicationRestoreConfiguration": { 
+         "ApplicationRestoreType": "SKIP_RESTORE_FROM_SNAPSHOT"
+         }
+    }
+}

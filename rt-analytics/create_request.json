@@ -1,0 +1,41 @@
+{
+    "ApplicationName": "CompanyJobProcessing",
+    "ApplicationDescription": "Java Flink app to merge company and big data job events",
+    "RuntimeEnvironment": "FLINK-1_15",
+    "ServiceExecutionRole": "arn:aws:iam::403993201276:role/service-role/kinesis-analytics-CompanyJobProcessing-us-west-2",
+    "ApplicationConfiguration": {
+        "ApplicationCodeConfiguration": {
+            "CodeContent": {
+                "S3ContentLocation": {
+                    "BucketARN": "arn:aws:s3:::jb-data-set",
+                    "FileKey": "churn/bg-job-processing-1.0.0.jar"
+                }
+            },
+            "CodeContentType": "ZIPFILE"
+        },
+        "EnvironmentProperties":  { 
+         "PropertyGroups": [ 
+            { 
+               "PropertyGroupId": "ProducerConfigProperties",
+               "PropertyMap" : {
+                    "flink.stream.initpos" : "LATEST",
+                    "aws.region" : "us-west-2",
+                    "AggregationEnabled" : "false",
+                    "S3SinkPath": "s3://jb-data-set/churn"
+               }
+            },
+            { 
+               "PropertyGroupId": "ConsumerConfigProperties",
+               "PropertyMap" : {
+                    "aws.region" : "us-west-2",
+                    "jobs.stream.initial.position" : "LATEST",
+                    "jobs.stream.name": "bigdatajobs",
+                    "companies.stream.initial.position" : "LATEST",
+                    "companies.stream.name": "companies"
+               }
+            }
+         ]
+      }
+    }
+}
+

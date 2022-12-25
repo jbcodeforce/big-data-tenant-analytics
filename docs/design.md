@@ -15,15 +15,34 @@ As presented in the introduction we have the following components in scope for t
 * [API Gateway and Lambda](#api-gateway-and-lambda-function-for-sagemaker) to proxy the predictive service.
 * [Real-time data analytics](#kinesis-data-analytics)
 
+## Domain Driven Design
+
+### Event Definition
+
+We need to track the following events:
+
+* account created: company name and industry, sentiment about the company
+* user added, user deleted
+* user login, user logoff, user session timeoff
+* jobSubmitted, jobTerminated, jobCancelled
+
+* Data elements to consider: number of server, data size
+* Concentrates those events into kinesis streams: companies, jobs
+* Keep data for 24 hours
+* Move data for long term persistence to S3, bucket per companies
+* Use Sagemaker to develop a decision tree or random forest model to score risk of customer churn. The training set will be created by simulator so we can build a decision tree
+* Deploy the model as sagemaker hosted service and integrate it into an agent that listening to events from jobs, users, tenant topics and score the risk of churn. Implement a Kinesis streams analytics with the logic of 
+
+
 ## EKS cluster creation and solution deployment
 
 ### EKS Cluster creation with CDK
 
 To use an infrastructure as code we use CDK to create a EKS cluster. The AWS CDK revolves around a fundamental building block called a construct. These constructs have three abstraction levels:
 
-L1 – A one-to-one mapping to AWS CloudFormation
-L2 – An intent-based API
-L3 – A high-level pattern
+* L1 – A one-to-one mapping to AWS CloudFormation
+* L2 – An intent-based API
+* L3 – A high-level pattern
 
 
 ## [Kinesis Data Streams](https://aws.amazon.com/kinesis/data-analytics/)
@@ -112,6 +131,14 @@ The underlying architecture consists of a **Job Manager** and n **Task Managers*
 
 ![](./images/flink-arch.png){ width=600px }
 
+To support the execution of Flink job, KDA provides resources using units called Kinesis Processing Units (KPUs).
+
+* One KPU represents the following system resources:
+* One CPU core
+* 4 GB of memory, of which one GB is native memory and three GB are heap memory
+* 50 GB of disk space
+
+The number of KPU = Parallelism parameter / ParallelismPerKPU parameter.
 
 ### When to choose what
 
@@ -126,6 +153,13 @@ In addition to the AWS integrations, the Kinesis Data Analytics libraries includ
 [See this dedicated note](../rt-analytics/)
 
 ## QuickSight Integration Design
+
+We need to represent the following metrics within QuickSight:
+
+* tenants, # of users
+* job submitted over time per tenant
+* last activity date per tenant
+* number of job in last 30 and 90 days
 
 The Dashboard is supported by Amazon QuickSight, which helps us to develop Analysis from different datasources, with drill down capabilities. The datasources are in S3 bucket with files that are continuously updated by the Data Streaming and Analtics components.  
 

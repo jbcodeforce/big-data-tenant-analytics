@@ -1,3 +1,5 @@
 site/
 **/.venv/
 **/node_modules/
+rt-analytics/security-policy.json
+rt-analytics/create-request.json
