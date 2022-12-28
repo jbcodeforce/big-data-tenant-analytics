@@ -4,9 +4,11 @@ nav:
   - Introduction: index.md
   - Business Dashboard: dashboard.md
   - Architecture & Design: design.md
+  - EKS: eks.md
   - ML model: model.md
   - RT Analytics: rt-analytics.md
   - Tenant Manager: java-apps.md
+  - AWS studies: https://jbcodeforce.github.io/aws-studies/
   
 theme: 
   name: material

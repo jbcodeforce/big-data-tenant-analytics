@@ -3,3 +3,4 @@ site/
 **/node_modules/
 rt-analytics/security-policy.json
 rt-analytics/create-request.json
+tenant-manager/database/

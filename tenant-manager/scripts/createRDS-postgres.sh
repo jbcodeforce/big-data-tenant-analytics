@@ -6,4 +6,5 @@ aws rds create-db-instance \
     --db-instance-class db.t3.micro \
     --master-username postgres \
     --master-user-password p0stgrespwd \
-    --backup-retention-period 1
+    --backup-retention-period 1 \
+    --vpc-security-group-ids 
