@@ -16,6 +16,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import jbcodeforce.saas.tm.api.dto.TenantDTO;
 import jbcodeforce.saas.tm.domain.Tenant;
 import jbcodeforce.saas.tm.infra.TenantRepository;
 
@@ -29,27 +30,28 @@ public class TenantResource {
     TenantRepository repository;
 
     @GET
-    @Path("/{id}")
-    public Tenant get(String id) {
-        return repository.findByTenantID(id);
+    @Path("/{tenantID}")
+    public Tenant get(String tenantID) {
+        return repository.findByTenantID(tenantID);
     }
 
     @GET
-    public List<Tenant> getAllCarTenants() {
+    public List<Tenant> getAllTenants() {
         return repository.getAll();
     }
 
     @POST
-    public Response createNewTenant(Tenant aNewTenant) {
+    public Response createNewTenant(TenantDTO aNewTenantDTO) {
+        Tenant aNewTenant = Tenant.fromDTO(aNewTenantDTO);
         aNewTenant = repository.createNewTenant(aNewTenant);
         return Response.ok(aNewTenant).build();
     }
 
     @PUT
-    @Path("/{id}")
+    @Path("/{tenantID}")
     @Transactional
-    public Tenant update(Long id, Tenant aTenant) {
-        Tenant entity = repository.findById(id);
+    public Tenant updateExistingTenant(String tenantID, Tenant aTenant) {
+        Tenant entity = repository.findByTenantID(tenantID);
         if(entity == null) {
             throw new NotFoundException();
         }
@@ -58,10 +60,10 @@ public class TenantResource {
     }
 
     @DELETE
-    @Path("/{id}")
+    @Path("/{tenantID}")
     @Transactional
-    public void delete(Long id) {
-        Tenant entity = repository.findById(id);
+    public void delete(String tenantID) {
+        Tenant entity = repository.findByTenantID(tenantID);
         if(entity == null) {
             throw new NotFoundException();
         }

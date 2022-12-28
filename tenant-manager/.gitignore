@@ -1,3 +1,5 @@
+tenant-manager/target/
+tenant-manager/database
 #Maven
 target/
 pom.xml.tag

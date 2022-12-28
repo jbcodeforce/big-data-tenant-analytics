@@ -21,7 +21,7 @@ As presented in the introduction we have the following components in scope for t
 
 We need to track the following events:
 
-* account created: company name and industry, sentiment about the company
+* tenant created: company name and industry, sentiment about the company
 * user added, user deleted
 * user login, user logoff, user session timeoff
 * jobSubmitted, jobTerminated, jobCancelled
@@ -36,13 +36,9 @@ We need to track the following events:
 
 ## EKS cluster creation and solution deployment
 
-### EKS Cluster creation with CDK
+The microservices are deploy to EKS. We could have added Kafka as a middleware, deployed in EKS with the Strimzi operator, but the goal is to integrate with Kinesis Data Streams.
 
-To use an infrastructure as code we use CDK to create a EKS cluster. The AWS CDK revolves around a fundamental building block called a construct. These constructs have three abstraction levels:
-
-* L1 – A one-to-one mapping to AWS CloudFormation
-* L2 – An intent-based API
-* L3 – A high-level pattern
+The following diagram illustrates the target deployment:
 
 
 ## [Kinesis Data Streams](https://aws.amazon.com/kinesis/data-analytics/)

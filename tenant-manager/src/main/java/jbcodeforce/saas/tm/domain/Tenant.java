@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jbcodeforce.saas.tm.api.dto.TenantDTO;
 
 @Entity
 public class Tenant extends PanacheEntityBase {
@@ -47,6 +48,13 @@ public class Tenant extends PanacheEntityBase {
                     inTenant.totalFee,
                     inTenant.riskOfChurn);
         return t;
+    }
+
+    public static Tenant fromDTO(TenantDTO aNewTenantDTO) {
+        return new Tenant(aNewTenantDTO.tenantID,
+                aNewTenantDTO.industry,
+                aNewTenantDTO.revenu,
+                aNewTenantDTO.employees,0,0,0.0,0.0,false);
     }
     
 }
