@@ -1,8 +1,12 @@
-# tenant-manager Project
+# Tenant Manager Microservice
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+This is a standard reactive app to demonstrate an event-driven SaaS solution, its goal is to offer operation to manage Tenant. 
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+## Requirements
+
+* Tenant represents a company subscribing to the SaaS product.
+* Tenant has users
+* 
 
 ## Running the application in dev mode
 
@@ -47,10 +51,3 @@ You can then execute your native executable with: `./target/tenant-manager-1.0.0
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
 
-## Provided Code
-
-### RESTEasy Reactive
-
-Easily start your Reactive RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)

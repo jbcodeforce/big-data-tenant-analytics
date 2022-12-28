@@ -1,17 +1,17 @@
 # Big Data SaaS Management Demonstration
 
 !!! Update
-    12/23/2022
+    12/28/2022
 
 ## Introduction
 
-As an ISV delivering Big Data platform for their on-premises customers, AnyCompany wants to move to a SaaS model. They designed a new architecture with multi-tenant support. They selected a bridge pattern to support their different customer's requirements:
+As an ISV delivering Big Data platform for their on-premises customers, AnyCompany wants to move to a SaaS model. They designed a new architecture with multi-tenant support. They selected the multi-tebancy 'bridge' pattern to support their different customer's requirements:
 
 ![](./diagrams/saas-tenant-patterns.drawio.png)
 
 **Figure 1: Multi-tenant patterns**
 
-The bridge pattern means some customers will run their big data workload on a shared cluster, while others will be fully isolated at the cluster level. A fully isolated solution will be with the Silo pattern, where customers run on their own account and get a copy of the SaaS vendor software stack. On the right side the Pool pattern is mostly use for tutorial, getting started with the SaaS product, where all tenants are in the same cluster resources. Even in pool or bridge pattern the data are isolated.
+The **Bridge** pattern means some customers will run their big data workload on a shared cluster, while others will be fully isolated at the cluster level. A fully isolated solution will be with the **Silo** pattern, where customers run on their own account and get a copy of the SaaS vendor software stack. On the right side the **Pool** pattern is mostly used during product evalutio, tutorial, getting started with the SaaS product, where all the tenants are in the same cluster resource. Even in pool or bridge pattern the data are isolated.
 
 The current AnyCompany's software stack for the big data processing looks as in the figure below:
 
@@ -19,7 +19,7 @@ The current AnyCompany's software stack for the big data processing looks as in 
 
 **Figure 2: Big-data simple view**
 
-A control plane manages the job submission into a cluster of worker nodes. Each node has an executor that runs jobs. A job include data loading, transformation, processing and persistence of the results. Once jobs are terminated resources can be reallocated. The distributed file storage supports two use cases, the long term persistence, highly available and scalable of the data lake, and local NFS cluster to support job execution data caching or snapshots.
+A **control plane** manages the job submission into a cluster of worker nodes. Each node has an executor that runs jobs. A job includes a set of step for data loading, transformation, processing and persistence of the results. Once jobs are terminated resources can be reallocated. The distributed file storage supports two use cases, the long term persistence, highly available and scalable of the data lake, and local NFS cluster to support the job execution data caching and snapshots.
 
 The new SaaS platform includes a set of microservices to register tenant, to manage account, billing, and specific components which support data catalog, and coordinate big data batch execution. 
 
@@ -29,9 +29,9 @@ The following diagram is the outcome of the Dicovery workshop hold early Decembe
 
 **Figure 3: Discovery outcome**
 
-All the platform components are generating a lot of meta data about tenant, user's activities and job submission, and we want to propose to extend their SaaS architecture to leverage AWS services such as Kinesis, SageMaker, Quicksight to monitor their users activities and assess a risk of churn by not using the platform as expected. 
+All the platform components are generating a lot of metadata about tenant, user's activities and job submissions, and we want to propose to extend their SaaS architecture to leverage AWS services such as Kinesis, SageMaker, Quicksight to monitor their users activities and assess the risk of churn bof leaving platform. 
 
-## Goals
+## Business Motivations
 
 The following business questions may be answered by using the new analytics platform:
 
@@ -43,7 +43,7 @@ The following business questions may be answered by using the new analytics plat
 
 ## Demonstration Scope
 
-From a demonstration point of view, we want to address the data pipeline, the Scoring service integration into real-time event processing, and dashboarding. The following figure illustrates the scope of the demonstration in term of components involved:
+From a demonstration point of view, we want to address the data pipeline, the Scoring service integration into real-time event processing, and the dashboarding. The following figure illustrates the scope of the demonstration in term of components involved:
 
 ![](./diagrams/solution-comp-view.drawio.png)
 
@@ -51,16 +51,16 @@ From a demonstration point of view, we want to address the data pipeline, the Sc
 
 The control plane will be supported by two Java Microprofile services that will persist state in different database type (dynamoDB for the job manager, and RDS Postgrseql for Tenant Manager) and generate events to Kinesis Data Streams.
 
-* Tenant Manager is a basic Quarkus, JPA with Panache and RDS Postgresql DB to persist Tenant, Users, billing tables.
-* Job Manager to simulate Batch Big data Job creation to the Big Data platform.
+* Tenant Manager is a basic Java Quarkus, JPA with Panache and RDS Postgresql DB to persist Tenant, Users, billing tables.
+* Job Manager is also a Java Quarkus app, used to simulate Batch Big data Job creation to the Big Data platform.
 
-Those two services run on AWS EKS, the Kubernetes cluster managed services. The value of running the microservices on EKS is to support a serverless deployment model, where Kubernetes cluster scale the K8s control plane across multiple AZs. The following figure demonstrate a classical EKS cluster deployment inside of an AWS region. As an elastic platform, we can add nodes to the EKS cluster, and each node run hundred of containers:
+Those two services run on AWS EKS, the Kubernetes cluster managed services. The value of running the microservices on EKS is to support a serverless deployment model, where Kubernetes cluster scales the K8s control plane across multiple AZs. The following figure demonstrates a classical EKS cluster deployment inside of an AWS region. As an elastic platform, we can add nodes to the EKS cluster, and each node run hundred of containers:
 
 ![](./diagrams/eks-ec2.drawio.svg)
 
 **Figure 5: Reference Architecture for EKS deployment**
 
-No need to install, operate and maintain k8s cluster. It automatically scales control plane instances based on load, detects and replaces unhealthy control plane instance. It supports EC2 to deploy worker nodes or Fargate to deploy serverless containers. EKS uses IAM to provide authentication to your Kubernetes cluster, and k8s RBAC for authorization. See [this note](../eks) for details about running the SaaS solution control plane and customer data plane in a multi-tenant way to support the `bridge pattern`.
+No need to install, operate and maintain k8s cluster. It automatically scales control plane instances based on load, detects and replaces unhealthy containers. It supports EC2 to deploy worker nodes or Fargate to deploy serverless containers. EKS uses IAM to provide authentication to your Kubernetes cluster, and k8s RBAC for authorization. See [this note](../eks) for details about running the SaaS solution and customer data plane in a multi-tenant way to support the `bridge pattern`.
 
 As en event-driven solution we want to have events ingected to Kinesis Data Streams so we can plug real-time analytics (running in Kinesis Data Analytics) to be able to answer some of the questions asked by the business users.
 
@@ -68,15 +68,18 @@ We will use Infrastructure as Code as much as possible to automate the provision
 
 ### Components list from figure 4
 
-* **Amazon SageMaker** for scoring risk of churn: The description of the model is in [this note](../model).
-* **Dashboard in Amazon QuickSight**  a simple dashboard to illustrate some of the metrics as defined by the requirements listed above: [See this note](../dashboard)
+* **Amazon SageMaker** to support the development, deployment and hosting of the risk of churn scoring: The description of the model is in [this note](../model).
+* **Dashboard in Amazon QuickSight**:  is a simple dashboard to illustrate some of the metrics as defined by the requirements listed above: [See the note for implementatiopn details.](../dashboard)
 * **API Gateway and Lambda** function to proxy/ facade SageMaker scoring service, [see this note](../design/#quicksight-integration-design).
-* **Kinesis Data Streams** to persist and distribute events generated by the different components of the solution. [See this note](design/#eks-cluster-creation-with-cdk).
+* **Kinesis Data Streams** to persist and distribute events generated by the different components of the solution. [See this note for configuration](design/#eks-cluster-creation-with-cdk).
 * **Real-time analytics** using Kinesis Data Analytics, the details for the implementation and deployment are in [this note](../rt-analytics/).
+* **AWS S3**: is used by the SaaS's customers to support persistence of their data, and it is used in our solutions to support two use cases:
+
+    * Model development, with persistence of training, validation and test sets, and the model built.
+    * To persist the aggregates events, output of the data streams processing, and input for the QuickSight dahboard.
 
 To be continued:
 
-* S3
 * DynamoDB
 * RDS table
 * Tenant manager Microservice

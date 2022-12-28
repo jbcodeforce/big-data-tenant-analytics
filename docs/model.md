@@ -1,7 +1,9 @@
 # Company Churn assess AI model development with SageMaker
 
 
-The goal of this service is to compute the risk for a customer to leave the SaaS platgorm. The scoring takes into account the industry type, the company size in term of revenue and number of employees, and then specifics features from the SaaS business model. In our case we will take a company doing big data job management so we can add 
+## Introduction
+
+The goal of this service is to compute the risk for a customer to leave the SaaS platform. The scoring takes into account the industry type, the company size in term of revenue and number of employees, and then specifics features from the SaaS business model. In our case we will take a company doing big data job management so we can add 
  variables: number of jobs in last 30 days, and 90 days, monthly  charge, total charge, number of time tutorials were done so far cross all users.    
 
 Here is simple example of training data: (Revenue is in million $)
@@ -23,7 +25,7 @@ The following figure illustrates how to build the model using Amazon SageMaker (
 
 **Figure 1: SageMaker Model Training and Runtime deployment** 
 
-The runtime is exposing an Endpoint that we can access using ASW SDK from a lambda or a microservice. 
+The runtime is exposing an Endpoint that we can access using ASW SDK from a lambda or a microservice , or Kinesis Data Analytics. 
 
 To train the model we use a predefined algorithm, packaged as docker image, and available inside SageMaker notebook, via access to Amazon Elastic Container Registry.
 
@@ -39,19 +41,19 @@ The [companies.csv](https://github.com/jbcodeforce/big-data-tenant-analytics/blo
 
 If you want to re-run the simulator you can do the following steps.
 
-1. Be sure to have last AWS CLI and python library. You can use [AWS Powershell]() and clone this repository, or if you use your own computer, you can use a docker image built from [aws-studies labs folder](https://github.com/jbcodeforce/aws-studies/tree/main/labs) dockerfile:
+1. Be sure to have last AWS CLI and python library. You can use [AWS Powershell]() and clone this repository, or if you use your own computer, you can use a docker image built from a dockerfile in [aws-studies labs folder](https://github.com/jbcodeforce/aws-studies/tree/main/labs):
 
     ```sh
     docker build -f https://raw.githubusercontent.com/jbcodeforce/aws-studies/main/labs/Dockerfile -t jbcodeforce/aws-python .
     ```
 
-1. Start the python env with docker
+1. Start the python environment with docker, mounting the source code to `/app`:
 
     ```sh
     docker run --rm  --name pythonapp -v $(pwd):/app -v ~/.aws:/root/.aws -it  -p 5000:5000 jbcodeforce/aws-python bash
     ```
 
-1. Run the data generator
+1. Run the data generator:
 
     ```sh
     python CompanyDataGenerator.py companies.csv --nb_records 10000
@@ -61,10 +63,10 @@ If you want to re-run the simulator you can do the following steps.
 
 ### Simulator code explanations
 
-* Use argparser to define the argument for the command line
+* Use argparser to define the argument for the command line.
 * Generate nb_records row: company has unique id, industry is selected randomly, revenue and number of employee is linked to the revenue.
-* Churn flag is set to 1 if revenue is low
-* Use `csv` library to write the csv file
+* Churn flag is set to 1 if revenue is low.
+* Use `csv` library to write the csv file.
 
 ## Upload generated files to S3
 
@@ -108,11 +110,25 @@ The goal of this section is to build the churn predictive scoring model within S
 
 1. Executes the steps one by one or all of them, it should create the training set, test sets, build and deploy the model using the SageMaker Python API. 
 
-1. Be sure to keep the name of the service end point as it is needed for the client to call this service.
+1. Be sure to keep a copy of the name of the service endpoint as it is needed for the client to call this service in future steps.
 
 ### Deeper dive: build model 
 
-The work is quite simple, remove unnecessary columns, transform categorical features to one hot columns. Split 20% of the records to build a test set, the rest being the training set.
+The notebook work is quite simple: remove unnecessary columns, transform categorical features to one hot columns. Split 20% of the records to build a test set, the rest being the training set.
+
+```python
+industryCat = df["Industry"].unique()
+industry_type = CategoricalDtype(categories=industryCat)
+df = df.drop(['Company'],axis=1)
+df = pd.get_dummies(df,columns=['Industry'])
+# SageMaker requires that a CSV file does not have a header record and that the target variable is in the first column. 
+cols= df.columns.tolist()
+cols = [cols[6]]+cols[:5]+cols[7:]
+df=df[cols]
+train_data, test_data, _ = np.split(df.sample(frac=1, random_state=1729), [int(0.8 * len(df)), len(df)])
+train_data.to_csv('train.csv', header=False, index=False)
+test_data.to_csv('test.csv', header=False, index=False)
+```
 
 Using Python AWS SDK named boto3, we can upload the created data sets to S3 bucket 
 
@@ -121,7 +137,7 @@ boto3.Session().resource('s3').Bucket(data_bucket).Object(os.path.join(PREFIX, '
 boto3.Session().resource('s3').Bucket(data_bucket).Object(os.path.join(PREFIX, 'validation/test.csv')).upload_file('test.csv')
 ```
 
-and then use sagemaker SDK to 
+and then use sagemaker SDK to define input and validation sets:
 
 ```python
 train_data = sagemaker.inputs.TrainingInput(
@@ -172,7 +188,7 @@ linear.set_hyperparameters(
     epochs=16,
     wd=0.01,
     loss="absolute_loss",
-    predictor_type="regressor",
+    predictor_type="binary_classifier",
     normalize_data=True,
     optimizer="adam",
     mini_batch_size=1000,
@@ -184,21 +200,30 @@ linear.set_hyperparameters(
 linear.fit(inputs={"train": train_data, "validation": validation_data}, job_name=job_name)
 ```
 
-* Deploy the model with the command
+* Deploy the model with the following code:
 
 ```python
 linear_predictor = linear.deploy(initial_instance_count=1, instance_type="ml.c4.xlarge")
 print(f"\ncreated endpoint: {linear_predictor.endpoint_name}")
 ```
 
-* We can try some prediction in the notebook
+    Be sure to keep the name of the endpoint, as we will need it for the lambda.
+
+* We can try some prediction in the notebook using cless like:
 
 ```python
-payload="19100,9550,6,39,227,810,0,0,0,0,0,0,1,0,0"
+payload="19100,9550,6,39,227,810,0,0,0,0,0,0,1,0"
 result=linear_predictor.predict(payload)
 print(result)
+# Result looks like:
+{'predictions': [{'score': 0.985599935054779, 'predicted_label': 1}]}
 ```
 
-Or using a python client, you can run inside a EC2 or on your computerm see code [CompanyRisk/CallSageMakerRunTime.py](https://github.com/jbcodeforce/big-data-tenant-analytics/blob/main/CompanyRisk/CallSageMakerRunTime.py), be sure to set the ENDPOINT to the SageMaker endpoint name. 
+Or using a python client, you can run inside a EC2 or on your computer see code [CompanyRisk/CallSageMakerRunTime.py](https://github.com/jbcodeforce/big-data-tenant-analytics/blob/main/CompanyRisk/CallSageMakerRunTime.py), be sure to set the ENDPOINT variable to the SageMaker endpoint name. 
 
 The URL is not public, but could also being accessed via an HTTP POST from an EC2 in the same VPC.
+
+## Read more
+
+* [SageMaker - Linear Learner](https://sagemaker.readthedocs.io/en/stable/algorithms/tabular/linear_learner.html)
+* [SageMaker - Common Data Formats for Training](https://docs.aws.amazon.com/sagemaker/latest/dg/cdf-training.html)
