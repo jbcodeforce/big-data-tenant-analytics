@@ -51,7 +51,7 @@ class EksCdkStack(Stack):
         self.cluster = aws_eks.Cluster(self, 'demo-cluster',
                                   masters_role=self.eks_admin_role,
                                   vpc=self.vpc,
-                                  default_capacity=1,
+                                  default_capacity=2,
                                   vpc_subnets=[aws_ec2.SubnetSelection(subnet_type=aws_ec2.SubnetType.PRIVATE_WITH_EGRESS)],
                                   version=aws_eks.KubernetesVersion.V1_24,
                                   output_cluster_name=True

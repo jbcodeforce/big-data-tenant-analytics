@@ -8,6 +8,7 @@ nav:
   - ML model: model.md
   - RT Analytics: rt-analytics.md
   - Tenant Manager: java-apps.md
+  - Infrastructure as code: cdk.md
   - AWS studies: https://jbcodeforce.github.io/aws-studies/
   
 theme: 
