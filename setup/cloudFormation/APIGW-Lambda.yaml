@@ -141,7 +141,7 @@ Resources:
                 Effect: Allow
                 Resource:
                   - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${lambdaFunctionName}:*
-          PolicyName: lambda
+          PolicyName: LambdaLogs
         - PolicyDocument:
             Version: 2012-10-17
             Statement:

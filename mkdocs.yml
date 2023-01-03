@@ -6,6 +6,7 @@ nav:
   - Architecture & Design: design.md
   - EKS: eks.md
   - ML model: model.md
+  - API Gateway - Lambda: api-lambda.md
   - RT Analytics: rt-analytics.md
   - Tenant Manager: java-apps.md
   - Infrastructure as code: cdk.md
