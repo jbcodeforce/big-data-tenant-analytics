@@ -2,6 +2,10 @@
 
 This section addresses major architecture decisions and design choices:
 
+* Real-time streaming and analytics
+* API gateway and ML predictive scoring.
+* Business intelligence on data at rest.
+
 ## Component view
 
 As presented in the introduction we have the following components in scope for this demonstration:
@@ -10,10 +14,10 @@ As presented in the introduction we have the following components in scope for t
 
 **Figure 1: Solution Component View**
 
-* [The Dashboard](./#quicksight-integration-design) to present business insight on the execusion of the SaaS business.
-* [SageMaker to support development of scoring model and runtime exposure](../model).
-* [API Gateway and Lambda](#api-gateway-and-lambda-function-for-sagemaker) to proxy the predictive service.
-* [Real-time data analytics](#kinesis-data-analytics)
+* [The Dashboard](./#quicksight-integration-design) to present business insight on the execusion of the SaaS business. It uses AWS QuickSight.
+* [SageMaker to support development of scoring model and runtime deployment](../model).
+* [API Gateway and Lambda](#api-gateway-and-lambda-function-for-sagemaker) to proxy the predictive service and do data transformation.
+* [Real-time data analytics](#kinesis-data-analytics) to do stateful processing.
 
 ## Domain Driven Design
 
@@ -25,20 +29,18 @@ We need to track the following events:
 * user added, user deleted
 * user login, user logoff, user session timeoff
 * jobSubmitted, jobTerminated, jobCancelled
-
-* Data elements to consider: number of server, data size
 * Concentrates those events into kinesis streams: companies, jobs
 * Keep data for 24 hours
-* Move data for long term persistence to S3, bucket per companies
-* Use Sagemaker to develop a decision tree or random forest model to score risk of customer churn. The training set will be created by simulator so we can build a decision tree
-* Deploy the model as sagemaker hosted service and integrate it into an agent that listening to events from jobs, users, tenant topics and score the risk of churn. Implement a Kinesis streams analytics with the logic of 
+* Move data for long term persistence to S3, one bucket per companies
 
+### Business entities
+
+* We define Tenant as part of the tenant manager microservice, which will be considered as company in the risk scoring domain
+* Job is the entity to present big data batch processing.
 
 ## EKS cluster creation and solution deployment
 
-The microservices are deploy to EKS. We could have added Kafka as a middleware, deployed in EKS with the Strimzi operator, but the goal is to integrate with Kinesis Data Streams.
-
-The following diagram illustrates the target deployment:
+The microservices are deployed to EKS. We could have added Kafka as a middleware, deployed in EKS with the Strimzi operator, but the goal of this demonstration is to integrate with Kinesis Data Streams and Kinesis Data Analytics.
 
 
 ## [Kinesis Data Streams](https://aws.amazon.com/kinesis/data-analytics/)
@@ -61,7 +63,7 @@ This is a managed service for pub/sub streaming data. It is a distributed data s
 
 ### Deployment
 
-The CDK app under `cdk/kinesis` folder defines the following components:
+The CDK app under `setup/kinesis-cdk` folder defines the following components:
 
 
 And the steps to start them are:
@@ -69,7 +71,7 @@ And the steps to start them are:
 * Start the CDK app to create CloudFormation template and run it
 
 ```sh
-cd cdk/kinesis
+cd setup/kinesis-cdk
 cdk deploy
 ```
 
@@ -130,9 +132,10 @@ The underlying architecture consists of a **Job Manager** and n **Task Managers*
 To support the execution of Flink job, KDA provides resources using units called Kinesis Processing Units (KPUs).
 
 * One KPU represents the following system resources:
-* One CPU core
-* 4 GB of memory, of which one GB is native memory and three GB are heap memory
-* 50 GB of disk space
+
+    * One CPU core
+    * 4 GB of memory, of which one GB is native memory and three GB are heap memory
+    * 50 GB of disk space
 
 The number of KPU = Parallelism parameter / ParallelismPerKPU parameter.
 

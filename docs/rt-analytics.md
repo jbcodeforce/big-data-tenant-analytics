@@ -4,13 +4,19 @@ The goal of this component is to compute stateful analytics, do data transformat
 
 ![](./diagrams/qs-arch.drawio.png)
 
-**Figure 1**
+**Figure 1: Streaming components**
 
 ## Kinesis Data Streams
 
-There is nothing special in this demonstration, the creation of the different data streams is done using CDK. See [the file](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/kinesis-cdk/app.py) and to deploy those streams, do a `cdk deploy` under the folder: [setup/kinesis-cdk](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/kinesis-cdk).
-The persistence is set to 24 hours.
+There is nothing special in this demonstration, the creation of the different data streams is done using CDK. 
 
+* `bigdatajobs`: for job related events
+* `companies`: for event related to tenant entities events
+* `enrichedcompanies` to shared events with enriched data to be consumed by other services.
+
+
+See [the python file kinesis-cdk/app.py](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/kinesis-cdk/app.py) for the CDK definitions of those streams and to deploy them, do a `cdk deploy` under the folder: [setup/kinesis-cdk](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/kinesis-cdk).
+The persistence is set to 24 hours.
 
 ## Kinesis Data Analytics Code explanation
 
@@ -36,17 +42,12 @@ env.addSource(new FlinkKinesisConsumer<>(inputStreamName,
                 inputProperties));
 ```
 
-## to rework
 
-Joins between company and job streams on the company ID and add the number of jobs run (from job event) to the company current jobs count.
-
-* Job is: company_id, userid , #job_submitted
-* Out come is : company_id, industry, revenu, employees, job30 + #job_submitted, job90 + #job_submitted, monthlyFee, totalFee
 
 
 ## Deploy
 
-We need to create a role and permission policy so the application can access source and sink resources:
+We need to create a role and permission policy so the application can access source and sink resources and assume the role for `kinesisanalytics.amazonaws.com` service:
 
 ```sh
 aws iam create-role 
@@ -73,7 +74,21 @@ aws s3 cp $(pwd)/target/bg-job-processing-1.0.0.jar s3://jb-data-set/churn/bg-jo
 
 ### Manual deployment
 
-Using the Kinesis console to add an Analytics Application
+Using the Kinesis console we can add an Analytics Application:
+
+* Select the Flink runtime version:
+
+![](./images/kinesis-app-1.png)
+
+* Select the IAM role or create a new one. The policy 
+
+![](./images/kinesis-app-2.png)
+ 
+ * For demonstration we can use the Development deployment with 1 
+
+![](./images/kinesis-app-3.png)
+
+* Add configuration detail to get packaged code.
 
 ![](./images/kda-config-job.png)
 
@@ -100,3 +115,12 @@ aws kinesisanalyticsv2 delete-application --application-name CompanyJobProcessin
 ```sh
 aws s3 rm s3://jb-data-set/churn/bg-job-processing-1.0.0-runner.jar
 ```
+
+
+
+## to rework
+
+Joins between company and job streams on the company ID and add the number of jobs run (from job event) to the company current jobs count.
+
+* Job is: company_id, userid , #job_submitted
+* Out come is : company_id, industry, revenu, employees, job30 + #job_submitted, job90 + #job_submitted, monthlyFee, totalFee

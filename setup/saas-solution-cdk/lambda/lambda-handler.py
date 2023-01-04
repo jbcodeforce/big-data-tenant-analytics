@@ -1,14 +1,10 @@
 import os
 import io
 import boto3
-import csv, logging, jsonpickle
-
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.core import patch_all
+import csv, logging, json
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
-patch_all()
 
 # grab environment variables
 ENDPOINT_NAME = os.environ['ENDPOINT_NAME']
@@ -16,10 +12,10 @@ runtime= boto3.client('runtime.sagemaker')
 
 def lambda_handler(event, context):
     try:
-        logger.info('## ENVIRONMENT VARIABLES\r' + jsonpickle.encode(dict(**os.environ)))
-        eventJson=jsonpickle.encode(event)
-        logger.info('## EVENT\r' + eventJson)
-        logger.info('## CONTEXT\r' + jsonpickle.encode(context))
+        logger.info('## ENVIRONMENT VARIABLES\r' + json.dumps(dict(**os.environ)))
+        eventJsonStr=json.dumps(event)
+        logger.info('## EVENT\r' + eventJsonStr)
+        logger.info('## CONTEXT\r' + str(context))
         industryMapping={   "consulting": "1,0,0,0,0,0,0,0",
                             "retail"   : "0,1,0,0,0,0,0,0", 
                             "service"  : "0,0,1,0,0,0,0,0",
@@ -29,10 +25,10 @@ def lambda_handler(event, context):
                             "travel"   : "0,0,0,0,0,0,1,0",
                             "energy"   : "0,0,0,0,0,0,0,1",
                           }
-        fullRequest = jsonpickle.decode(eventJson)
+        fullRequest = json.loads(eventJsonStr)
         companyJsonStr = fullRequest['body']
         logger.info('payload:' + companyJsonStr)
-        companyJson = jsonpickle.decode(companyJsonStr)
+        companyJson = json.loads(companyJsonStr)
         payload= str(companyJson['revenu']) \
             + "," + str(companyJson['employee']) \
             + "," + str(companyJson['job30']) \
@@ -44,7 +40,7 @@ def lambda_handler(event, context):
         response = runtime.invoke_endpoint(EndpointName=ENDPOINT_NAME,
                                         ContentType='text/csv',
                                         Body=payload)
-        result = jsonpickle.decode(response['Body'].read().decode())
+        result = json.loads(response['Body'].read().decode())
         prediction = result['predictions'][0]
     
     except Exception as e:

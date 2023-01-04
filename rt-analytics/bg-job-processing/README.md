@@ -44,6 +44,8 @@ docker exec -ti $JMC flink run -d -c $CNAME /home/bg-job-processing/target/bg-jo
 
 ## Deploy to S3
 
+Once the code is packaged with `mvn package`, upload the jar to S3 bucket with:
+
 ```sh
 aws s3 cp $(pwd)/target/bg-job-processing-1.0.0-runner.jar s3://jb-data-set/churn/bg-job-processing-1.0.0-runner.jar
 ```
