@@ -42,13 +42,16 @@ def lambda_handler(event, context):
                                         Body=payload)
         result = json.loads(response['Body'].read().decode())
         prediction = result['predictions'][0]
-    
+        logger.info(str(prediction))
     except Exception as e:
         # Send some context about this error to Lambda Logs
         print(e)
         raise e
-    
+    if prediction['predicted_label'] == 1:
+        churn = 'true';
+    else:
+        churn = 'false';
     return {
         'statusCode': 200,
-        'body': '{ "payload":' + payload + ',"result":' + str(prediction) +'}'
+        'body': '{ "churn":' + churn +'}'
     }

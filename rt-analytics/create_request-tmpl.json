@@ -2,7 +2,7 @@
     "ApplicationName": "CompanyJobProcessing",
     "ApplicationDescription": "Java Flink app to merge company and big data job events",
     "RuntimeEnvironment": "FLINK-1_15",
-    "ServiceExecutionRole": "arn:aws:iam::403993201276:role/CompanyAnalyticsRole",
+    "ServiceExecutionRole": "arn:aws:iam::ACCOUNT_NUMBER:role/CompanyAnalyticsRole",
     "ApplicationConfiguration": {
         "ApplicationCodeConfiguration": {
             "CodeContent": {
@@ -29,7 +29,7 @@
                 {
                     "PropertyGroupId": "ApplicationConfigProperties",
                     "PropertyMap": {
-                        "predictChurnApiEndpoint": "https://4re0qxh3zi.execute-api.us-west-2.amazonaws.com/prod/assessChurn",
+                        "predictChurnApiEndpoint": "https://API.execute-api.us-west-2.amazonaws.com/prod/assessChurn",
                         "predictChurnApiKey" : " ",
                         "S3SinkPath": "s3://jb-data-set/churn"
                     }

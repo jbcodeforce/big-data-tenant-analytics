@@ -69,32 +69,35 @@ public class JobEventProcessing {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
       
         ParameterTool parameters = getApplicationParameters();
-        URI predictChurnEndpoint = URI.create(parameters.getRequired("predictChurnApiEndpoint") + "assessChurn");
-        Map<String,String> apiKeyHeader = ImmutableMap.of("x-api-key", parameters.getRequired("ApiKey"));
+        URI predictChurnEndpoint = URI.create(parameters.getRequired("predictChurnApiEndpoint"));
+        Map<String,String> apiKeyHeader = ImmutableMap.of("x-api-key", parameters.getRequired("predictChurnApiKey"));
   
         DataStream<String> jobStreams = env.addSource(createJobEventDataStream(parameters));
         // apply here any filtering logic
         // ...
         // Build HTTP request to call Company Enrichment from Tenant Service
-        /* 
+        /** 
         DataStream<HttpRequest<Company>> callTenantServiceRequest = jobStreams.map(jobEvent ->  {
                 String[] words = jobEvent.split(",");
                 Company companyToEnrich = new Company(words[0]);
                 return new HttpRequest<Company>(companyToEnrich,SdkHttpMethod.GET)
                         .withRawQueryParameter("companyID", companyToEnrich.companyID);
                 });
-        Replaced by mockup call */
+        Replaced by mockup call 
+        */
         DataStream<Company> enrichedStream = jobStreams.map(jobEvent ->  {String[] words = jobEvent.split(",");
                 Company c = getCompanyRecord(words[0]);
                 return c;
         });
-        // Build HTTP request to call Inference Scoring Service
-        DataStream<HttpRequest<Company>> predictChurnRequest = enrichedStream.map(company ->  {
-              
-                return new HttpRequest<Company>(company,SdkHttpMethod.POST).withBody(company.toCSV());
+
+        // Build HTTP request from the company entity to call Inference Scoring Service
+        DataStream<HttpRequest<Company>> predictChurnRequest = enrichedStream.map(c ->  {
+                Company company = (Company)c;
+                return new HttpRequest<Company>(company,SdkHttpMethod.POST).withBody(mapper.writeValueAsString(company));
             });
-            DataStream<HttpResponse<Company>> predictChurnResponse =
-            // Asynchronously call predictFare Endpoint
+        
+        DataStream<HttpResponse<Company>> predictChurnResponse =
+            // Asynchronously call Endpoint
             AsyncDataStream.unorderedWait(
                 predictChurnRequest,
                 new Sig4SignedHttpRequestAsyncFunction<>(predictChurnEndpoint, apiKeyHeader),
@@ -107,10 +110,11 @@ public class JobEventProcessing {
             .filter(response -> response.statusCode == 200)
             // Enrich RideRequest with response from predictFareEndpoint
             .map(response -> {
-                boolean expectedChurn = mapper.readValue(response.responseBody, ObjectNode.class).get("churn").asBoolean(false);
+                boolean expectedChurn = mapper.readValue(response.responseBody, ObjectNode.class).get("churn").asBoolean();
                 return response.triggeringEvent.withExpectedChurn(expectedChurn);
             });
-            enrichedCompany.map(company -> company.toCSV()).addSink(createS3Sink(parameters));
+        
+        enrichedCompany.map(company -> company.toCSV()).addSink(createS3Sink(parameters));
         env.execute();
     }
 
@@ -119,9 +123,11 @@ public class JobEventProcessing {
           
         Map<String, Properties> applicationProperties = KinesisAnalyticsRuntime.getApplicationProperties();
 
+        Properties specificProperties = applicationProperties.get("ApplicationConfigProperties");
         Properties producerProperties = applicationProperties.get("ProducerConfigProperties");
         Properties consumerProperties = applicationProperties.get("ConsumerConfigProperties");
         Map<String, String> map = new HashMap<>(producerProperties.size() + consumerProperties.size());
+        specificProperties.forEach((k,v) -> map.put((String) k, (String) v));
         producerProperties.forEach((k, v) -> map.put((String) k, (String) v));
         consumerProperties.forEach((k,v) -> map.put((String) k, (String)v));
         return ParameterTool.fromMap(map);
@@ -131,7 +137,7 @@ public class JobEventProcessing {
         Company c = new Company();
         c.companyID = cid;
         c.employees = 1000;
-        c.industry = "Retail";
+        c.industry = "retail";
         c.job30 = 10;
         c.job90 = 100;
         c.revenu = 2000000;

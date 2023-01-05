@@ -1,0 +1,14 @@
+{
+    "ApplicationName": "CompanyJobProcessing",
+    "CurrentApplicationVersionId": 3,
+    "ApplicationConfigurationUpdate": {
+        "ApplicationCodeConfigurationUpdate": {
+            "CodeContentUpdate": {
+                "S3ContentLocationUpdate": {
+                    "BucketARNUpdate": "arn:aws:s3:::jb-data-set",
+                    "FileKeyUpdate": "churn/bg-job-processing-1.0.0.jar"
+                }
+            }
+        }
+    }
+}

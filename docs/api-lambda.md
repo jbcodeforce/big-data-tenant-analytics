@@ -68,20 +68,26 @@ We can test the API and SageMaker using the following payload:
 
 ```json
 { 
+    "companyID":"comp_4",
     "revenu": 99420,
     "industry": "travel",
     "employee": 4635,
     "job30": 10,
     "job90": 100,
     "monthlyFee": 400,
-    "totalFee": 1200
+    "totalFee": 1200,
+    "riskOfChurn":false
 }
 ```
 
 The result may look like:
 
 ```json
-{ "payload":99420,4635,10,100,400,1200,0,0,0,0,0,0,1,0,
-  "result": 
-     { 'score': 556.6936645507812, 'predicted_label': 1}}
+{ "churn": true}
 ```
+
+To get the API URL endpoint, go to API Gateway, Stages environment and select the URL path:
+
+![](./images/apigtw-api-url.png)
+
+this URL needs to be specified in the Kinesis Data Analytics parameters.
