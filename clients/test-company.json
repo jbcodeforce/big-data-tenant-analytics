@@ -1,7 +1,7 @@
 {
     "companyID":"comp_4",
     "revenu": 99420,
-    "industry": "travel",
+    "industry": "retail",
     "employee": 4635,
     "job30": 10,
     "job90": 100,
@@ -9,3 +9,5 @@
     "totalFee": 1200,
     "riskOfChurn":false
   }
+
+

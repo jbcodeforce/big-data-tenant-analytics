@@ -50,12 +50,12 @@ class SaasSolutionCdkStack(Stack):
                                 publicly_accessible=True
                         )
         
-             # Create an IAM role for worker groups and kubernetes RBAC configuration
+        # Create an IAM role for worker groups and kubernetes RBAC configuration
         self.eks_admin_role = aws_iam.Role(self, 'eksAdmin',
                                     assumed_by=aws_iam.ServicePrincipal(service='ec2.amazonaws.com'),
-                                                                          role_name='eks-cluster-role', 
-                                                                          managed_policies=
-                                                                                [aws_iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name='AdministratorAccess')])
+                                    role_name='eks-cluster-role', 
+                                    managed_policies=
+                                        [aws_iam.ManagedPolicy.from_aws_managed_policy_name(managed_policy_name='AdministratorAccess')])
         self.eks_instance_profile = aws_iam.CfnInstanceProfile(self, 'instanceprofile',
                                                       roles=[self.eks_admin_role.role_name],
                                                       instance_profile_name='eks-cluster-role')

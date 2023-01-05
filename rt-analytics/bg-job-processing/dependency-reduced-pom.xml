@@ -62,10 +62,6 @@
       <scope>provided</scope>
       <exclusions>
         <exclusion>
-          <artifactId>commons-lang3</artifactId>
-          <groupId>org.apache.commons</groupId>
-        </exclusion>
-        <exclusion>
           <artifactId>chill-java</artifactId>
           <groupId>com.twitter</groupId>
         </exclusion>
@@ -83,13 +79,6 @@
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>bom</artifactId>
-        <version>${aws.sdk.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>software.amazon.awssdk</groupId>
-        <artifactId>bom-internal</artifactId>
         <version>${aws.sdk.version}</version>
         <type>pom</type>
         <scope>import</scope>

@@ -95,10 +95,10 @@ public class JobEventProcessing {
         Replaced by mockup call 
         */
         DataStream<Company> companyStream = jobStreams.map(jobEvent ->  {String[] words = jobEvent.split(",");
-                Company c = getCompanyRecord(words[0]);
+                Company c = getCompanyRecord(words[0],words[2]);
                 return c;
         });
-
+/* 
         // Build HTTP request from the company entity to call Inference Scoring Service
         DataStream<HttpRequest<Company>> predictChurnRequest = companyStream.map(company ->  {
                 return new HttpRequest<Company>(company,SdkHttpMethod.POST).withBody(mapper.writeValueAsString(company));
@@ -122,7 +122,11 @@ public class JobEventProcessing {
                 boolean expectedChurn = mapper.readValue(response.responseBody, ObjectNode.class).get("churn").asBoolean();
                 return response.triggeringEvent.withExpectedChurn(expectedChurn);
             });
-        
+        */
+        DataStream<Company> enrichedCompany = companyStream.map(company ->  {
+            company.riskOfChurn = true;
+            return company;
+        });
         enrichedCompany.map(company -> company.toCSV()).addSink(createS3Sink(parameters));
         enrichedCompany.map(company -> company.toCSV()).sinkTo(createSinkToKinesis(parameters));
         env.execute();
@@ -143,16 +147,17 @@ public class JobEventProcessing {
         return ParameterTool.fromMap(map);
     }
 
-    public static Company getCompanyRecord(String cid) {
+    public static Company getCompanyRecord(String cid,String nbJobs) {
+        int nb_jobs = Integer.parseInt(nbJobs);
         Company c = new Company();
         c.companyID = cid;
-        c.employees = 1000;
+        c.employees = 4635;
         c.industry = "retail";
-        c.job30 = 10;
-        c.job90 = 100;
-        c.revenu = 2000000;
-        c.monthlyFee=550.00;
-        c.totalFee=10.00;
+        c.job30 = 10 + nb_jobs;
+        c.job90 = 100 + nb_jobs;
+        c.revenu = 100000;
+        c.monthlyFee=400.00;
+        c.totalFee=1200.00;
         c.riskOfChurn= Boolean.FALSE;
         return c;
     }

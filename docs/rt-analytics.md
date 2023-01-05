@@ -261,11 +261,9 @@ Here is an example of the job definition as deployed on AWS Data Analytics:
     aws kinesisanalyticsv2 start-application --cli-input-json file://start_application.json
     ```
 
-1. Send some data: use Start Python Env docker container:
+1. Send some data as job manager will do (use Start Python Env docker container):
 
     ```sh
-
-    # 
     python src/main/python/SendJobEventToKinesis.py 
     ```
 
@@ -331,7 +329,6 @@ aws kinesisanalyticsv2 delete-application --application-name CompanyJobProcessin
 
 ```sh
 aws s3 rm s3://jb-data-set/churn/bg-job-processing-1.0.0.jar
-
 ```
 
 

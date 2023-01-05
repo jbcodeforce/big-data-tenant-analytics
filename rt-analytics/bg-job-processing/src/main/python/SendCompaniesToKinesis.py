@@ -10,12 +10,12 @@ kinesis_client = boto3.client('kinesis',region_name=my_region)
 def sendCompanyJson():
     company={"companyID" : "comp_4",
             "industry": "retail",
-            "revenu": 29080,
-            "employees": 14540,
-            "job30": 4,
-            "job90":13,
-            "monthlyFee": 460.00,
-            "totalFee": 1172.00
+            "revenu": 100000,
+            "employees": 4635,
+            "job30": 10,
+            "job90":100,
+            "monthlyFee": 400.00,
+            "totalFee": 1200.00
     }
     companyAsString =json.dumps(company)
     print(companyAsString)
