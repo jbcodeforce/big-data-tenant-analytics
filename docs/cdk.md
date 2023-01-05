@@ -8,11 +8,13 @@ To use an infrastructure as code, we use CDK to create all the needed services a
 
 The solution CDK is under `setup/saas-solution-cdk` folder. The CDK creates the following elements:
 
-* VPC with private and public subnets
-* RDS Postgresql
-* EKS cluster
-* API Gateway
-* Lambda function
+* [x] VPC with private and public subnets
+* [x] RDS Postgresql
+* [ ] EKS cluster
+* [x] API Gateway
+* [x] Lambda function
+* [x] Kinesis Data Streams
+* [ ] Kinesis Data Analytics
 
 ## Deploy
 
@@ -65,7 +67,7 @@ vpc = aws_ec2.Vpc(self, "VPC",
 
 The result:
 
-![](./images/vpc-subnets.png)
+![](./images/vpc-subnets.png){ width=1100 }
 
 There are also two NAT gateways for outbound traffic and one Internet Gateway attached to the VPC.
 
@@ -95,9 +97,9 @@ The cloudformation will create a secret in AWS Secret Manager with the credentia
 
 And the security group needs to be modified to add inbound rules for port 5432 from any IP v4 addresses.
 
-![](./images/rds-connectivity.png)
+![](./images/rds-connectivity.png){ width=1000 }
 
-[Connection setup documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
+[RDS Connection setup documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html)
 
 ### EKS cluster
 
@@ -113,8 +115,6 @@ cluster = aws_eks.Cluster(self, 'demo-cluster',
                     output_cluster_name=True
                     )
 ```
-
-It should create a CloudFormation stack named EksCdkStack, and then VPC, public and private subnets, Internet Gateway, Routes, NAT gateway, IAM role resources.
 
 
 ## Deeper dive

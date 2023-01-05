@@ -1,13 +1,13 @@
 # Big Data SaaS Management Demonstration
 
 !!! Update
-    12/28/2022
+    1/04/2023
 
 ## Introduction
 
 As an ISV delivering Big Data platform for their on-premises customers, AnyCompany wants to move to a SaaS model. They designed a new architecture with multi-tenant support. They selected the multi-tebancy 'bridge' pattern to support their different customer's requirements:
 
-![](./diagrams/saas-tenant-patterns.drawio.png)
+![](./diagrams/saas-tenant-patterns.drawio.png){ width=900 }
 
 **Figure 1: Multi-tenant patterns**
 
@@ -15,7 +15,7 @@ The **Bridge** pattern means some customers will run their big data workload on 
 
 The current AnyCompany's software stack for the big data processing looks as in the figure below:
 
-![](./diagrams/big-data-isv-starting.drawio.png)
+![](./diagrams/big-data-isv-starting.drawio.png){ width=800 }
 
 **Figure 2: Big-data simple view**
 
@@ -45,7 +45,7 @@ The following business questions may be answered by using the new analytics plat
 
 From a demonstration point of view, we want to address the data pipeline, the Scoring service integration into real-time event processing, and the dashboarding. The following figure illustrates the scope of the demonstration in term of components involved:
 
-![](./diagrams/solution-comp-view.drawio.png)
+![](./diagrams/solution-comp-view.drawio.png){ width=900 }
 
 **Figure 4: Component View**
 

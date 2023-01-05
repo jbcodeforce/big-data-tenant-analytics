@@ -14,11 +14,17 @@ There is nothing special in this demonstration, the creation of the different da
 * `companies`: for event related to tenant entities events
 * `enrichedcompanies` to shared events with enriched data to be consumed by other services.
 
-
 See [the python file kinesis-cdk/app.py](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/kinesis-cdk/app.py) for the CDK definitions of those streams and to deploy them, do a `cdk deploy` under the folder: [setup/kinesis-cdk](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/setup/kinesis-cdk).
 The persistence is set to 24 hours.
 
-## Kinesis Data Analytics Code explanation
+## Kinesis Data Analytics
+
+### Why Kinesis Data Analytics
+
+This is a managed service, serverless, to run real-time streaming logic implemented using SQL, java, Scala. The core technology used is Apache Flink. The service is integrated with Kinesis Data Streams, and with a lot of AWS services to serve as sources or sinks. 
+Kinesis Data Analytics provides the underlying infrastructure for Flink applications. It handles core capabilities like provisioning compute resources, parallel computation, automatic scaling, and application backups implemented as checkpoints and snapshots.
+
+### Code base
 
 The code is under [rt-analytics/bg-job-processing](https://github.com/jbcodeforce/big-data-tenant-analytics/tree/main/rt-analytics/bg-job-processing) folder.
  
@@ -62,7 +68,7 @@ Those parameters are defined in the Application Creation request. [See create-re
                     "PropertyMap": {
                         "predictChurnApiEndpoint": "https://API.execute-api.us-west-2.amazonaws.com/prod/assessChurn",
                         "predictChurnApiKey" : " ",
-                        "S3SinkPath": "s3://jb-data-set/churn"
+                        "S3SinkPath": "s3://jb-data-set/churn/data"
                     }
                 },
                 {
@@ -95,11 +101,54 @@ env.addSource(new FlinkKinesisConsumer<>(inputStreamName,
                 inputProperties));
 ```
 
+Then we want to map the job information and extract the company_ID and map to a Company entity:
+
+```java
+ DataStream<Company> companyStream = jobStreams.map(jobEvent ->  {String[] words = jobEvent.split(",");
+                Company c = getCompanyRecord(words[0]);
+                return c;
+        });
+```
+
+The asynchronous call to the API Gateway and then sageMaker is done using Flink construct and custom class for HttpRequest:
+
+```java
+DataStream<HttpRequest<Company>> predictChurnRequest = companyStream.map(company ->  {
+                return new HttpRequest<Company>(company,SdkHttpMethod.POST).withBody(mapper.writeValueAsString(company));
+            })
+            .returns(new TypeHint<HttpRequest<Company>>() {});;
+        
+        DataStream<HttpResponse<Company>> predictChurnResponse =
+            // Asynchronously call Endpoint
+            AsyncDataStream.unorderedWait(
+                predictChurnRequest,
+                new Sig4SignedHttpRequestAsyncFunction<>(predictChurnEndpoint),
+                30, TimeUnit.SECONDS, 20
+            )
+            .returns(new TypeHint<HttpResponse<Company>>() {});
+
+        DataStream<Company> enrichedCompany = predictChurnResponse
+            // Only keep successful responses for enrichment, which have a 200 status code
+            .filter(response -> response.statusCode == 200)
+            // Enrich Company with response from predictChurn
+            .map(response -> {
+                boolean expectedChurn = mapper.readValue(response.responseBody, ObjectNode.class).get("churn").asBoolean();
+                return response.triggeringEvent.withExpectedChurn(expectedChurn);
+            });
+```
 
 
+Here is an example of the job definition as deployed on AWS Data Analytics:
 
-## Deploy
+![](./images/flink-console.png)
 
+### Deeper dive
+
+* [Real Time ML inference on Streaming Data](https://catalog.us-east-1.prod.workshops.aws/workshops/63069e26-921c-4ce1-9cc7-dd882ff62575/en-US/lab7)
+* [Streaming Data Solution for Amazon Kinesis Git repo](https://github.com/aws-solutions/streaming-data-solution-for-amazon-kinesis-and-amazon-msk)
+* [S3 sink with Flink](https://docs.aws.amazon.com/kinesisanalytics/latest/java/examples-s3.html)
+
+## Deployment
 
 1. Create IAM role to support application execution
 
@@ -195,7 +244,7 @@ env.addSource(new FlinkKinesisConsumer<>(inputStreamName,
 
     ```sh
     # build the uber jar
-    mvn package
+    mvn package -Dflink.version=1.15.2
     # upload to S3
     aws s3 cp $(pwd)/target/bg-job-processing-1.0.0.jar s3://jb-data-set/churn/bg-job-processing-1.0.0.jar
     ```
@@ -227,18 +276,18 @@ env.addSource(new FlinkKinesisConsumer<>(inputStreamName,
     aws s3 cp $(pwd)/target/bg-job-processing-1.0.0.jar s3://jb-data-set/churn/bg-job-processing-1.0.0.jar
     # Get application ID
     aws kinesisanalyticsv2 describe-application --application-name CompanyJobProcessing
-    # Modify the updateApplication.json file with the application ID
+    # result looks like
     {
     "ApplicationDetail": {
-        "ApplicationARN": "arn:aws:kinesisanalytics:us-west-2:403993201276:application/CompanyJobProcessing",
+        "ApplicationARN": "arn:aws:kinesisanalytics:us-west-2:4....6:application/CompanyJobProcessing",
         "ApplicationDescription": "Java Flink app to merge company and big data job events",
         "ApplicationName": "CompanyJobProcessing",
         "RuntimeEnvironment": "FLINK-1_15",
-        "ServiceExecutionRole": "arn:aws:iam::403993201276:role/CompanyAnalyticsRole",
+        "ServiceExecutionRole": "arn:aws:iam::....:role/CompanyAnalyticsRole",
         "ApplicationStatus": "RUNNING",
         "ApplicationVersionId": 3,
     }
-    
+    # Modify the updateApplication.json file with the application ID
     aws kinesisanalyticsv2 update-application --application-name CompanyJobProcessing --cli-input-json file://updateApplication.json
     ```
 
@@ -286,6 +335,9 @@ aws s3 rm s3://jb-data-set/churn/bg-job-processing-1.0.0.jar
 ```
 
 
+## Logging in CloudWatch
+
+As logging as enabled in the configuration, we can see the details of the job execution in the Log groups named `/aws/kinesis-analytics/CompanyJobProcessing`
 
 ## to rework
 
@@ -293,3 +345,18 @@ Joins between company and job streams on the company ID and add the number of jo
 
 * Job is: company_id, userid , #job_submitted
 * Out come is : company_id, industry, revenu, employees, job30 + #job_submitted, job90 + #job_submitted, monthlyFee, totalFee
+
+
+## Current error
+
+```java
+2023-01-04 21:43:34
+com.esotericsoftware.kryo.KryoException: Unable to find class: software.amazon.awssdk.internal.http.LowCopyListMap$$Lambda$1273/0x0000000800edc840
+Serialization trace:
+mapConstructor (software.amazon.awssdk.internal.http.LowCopyListMap$ForBuilder)
+headers (software.amazon.awssdk.http.DefaultSdkHttpFullRequest$Builder)
+builder (jbcodeforce.bgdatajob.operators.Sig4SignedHttpRequestAsyncFunction$HttpRequest)
+	at com.esotericsoftware.kryo.util.DefaultClassResolver.readName(DefaultClassResolver.java:138)
+	at com.esotericsoftware.kryo.util.DefaultClassResolver.readClass(DefaultClassResolver.java:115)
+
+```

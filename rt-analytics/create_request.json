@@ -23,7 +23,8 @@
                     "PropertyMap": {
                         "flink.stream.initpos": "LATEST",
                         "aws.region": "us-west-2",
-                        "AggregationEnabled": "false"
+                        "AggregationEnabled": "false",
+                        "enrichedcompanies.stream.name": "enrichedcompanies"
                     }
                 },
                 {
@@ -31,7 +32,7 @@
                     "PropertyMap": {
                         "predictChurnApiEndpoint": "https://4re0qxh3zi.execute-api.us-west-2.amazonaws.com/prod/assessChurn",
                         "predictChurnApiKey" : " ",
-                        "S3SinkPath": "s3://jb-data-set/churn"
+                        "S3SinkPath": "s3://jb-data-set/churn/outData"
                     }
                 },
                 {
@@ -48,13 +49,13 @@
         },
         "FlinkApplicationConfiguration" : {
             "MonitoringConfiguration": { 
-                "ConfigurationType": "DEFAULT",
+                "ConfigurationType": "CUSTOM",
                 "LogLevel": "INFO",
                 "MetricsLevel": "TASK"
              },
              "ParallelismConfiguration": { 
                 "AutoScalingEnabled": true,
-                "ConfigurationType": "DEFAULT",
+                "ConfigurationType": "CUSTOM",
                 "Parallelism": 1,
                 "ParallelismPerKPU": 1
              }

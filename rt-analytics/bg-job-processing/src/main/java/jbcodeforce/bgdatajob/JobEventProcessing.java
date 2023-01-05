@@ -11,9 +11,9 @@ import org.apache.flink.api.common.serialization.SimpleStringEncoder;
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.connector.kinesis.sink.KinesisStreamsSink;
 import org.apache.flink.core.fs.Path;
 import org.apache.flink.kinesis.shaded.com.amazonaws.regions.DefaultAwsRegionProviderChain;
-import org.apache.flink.kinesis.shaded.software.amazon.awssdk.utils.ImmutableMap;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.flink.streaming.api.datastream.AsyncDataStream;
@@ -59,6 +59,15 @@ public class JobEventProcessing {
                 .forRowFormat(new Path(parameters.getRequired("S3SinkPath")), new SimpleStringEncoder<String>("UTF-8"))
                 .build();
     }
+
+    private static KinesisStreamsSink<String> createSinkToKinesis(ParameterTool parameters) throws IOException {
+        return KinesisStreamsSink.<String>builder()
+            .setKinesisClientProperties(KinesisAnalyticsRuntime.getApplicationProperties().get("ProducerConfigProperties"))
+            .setSerializationSchema(new SimpleStringSchema())
+            .setStreamName(parameters.get("enrichedcompanies.stream.name","enrichedcompanies"))
+            .setPartitionKeyGenerator(element -> String.valueOf(element.hashCode()))
+                .build();
+    }
     
     public static void main(String[] args) throws Exception {
         
@@ -70,7 +79,7 @@ public class JobEventProcessing {
       
         ParameterTool parameters = getApplicationParameters();
         URI predictChurnEndpoint = URI.create(parameters.getRequired("predictChurnApiEndpoint"));
-        Map<String,String> apiKeyHeader = ImmutableMap.of("x-api-key", parameters.getRequired("predictChurnApiKey"));
+        //Map<String,String> apiKeyHeader = ImmutableMap.of("x-api-key", parameters.getRequired("predictChurnApiKey"));
   
         DataStream<String> jobStreams = env.addSource(createJobEventDataStream(parameters));
         // apply here any filtering logic
@@ -85,22 +94,22 @@ public class JobEventProcessing {
                 });
         Replaced by mockup call 
         */
-        DataStream<Company> enrichedStream = jobStreams.map(jobEvent ->  {String[] words = jobEvent.split(",");
+        DataStream<Company> companyStream = jobStreams.map(jobEvent ->  {String[] words = jobEvent.split(",");
                 Company c = getCompanyRecord(words[0]);
                 return c;
         });
 
         // Build HTTP request from the company entity to call Inference Scoring Service
-        DataStream<HttpRequest<Company>> predictChurnRequest = enrichedStream.map(c ->  {
-                Company company = (Company)c;
+        DataStream<HttpRequest<Company>> predictChurnRequest = companyStream.map(company ->  {
                 return new HttpRequest<Company>(company,SdkHttpMethod.POST).withBody(mapper.writeValueAsString(company));
-            });
+            })
+            .returns(new TypeHint<HttpRequest<Company>>() {});;
         
         DataStream<HttpResponse<Company>> predictChurnResponse =
             // Asynchronously call Endpoint
             AsyncDataStream.unorderedWait(
                 predictChurnRequest,
-                new Sig4SignedHttpRequestAsyncFunction<>(predictChurnEndpoint, apiKeyHeader),
+                new Sig4SignedHttpRequestAsyncFunction<>(predictChurnEndpoint),
                 30, TimeUnit.SECONDS, 20
             )
             .returns(new TypeHint<HttpResponse<Company>>() {});
@@ -108,13 +117,14 @@ public class JobEventProcessing {
         DataStream<Company> enrichedCompany = predictChurnResponse
             // Only keep successful responses for enrichment, which have a 200 status code
             .filter(response -> response.statusCode == 200)
-            // Enrich RideRequest with response from predictFareEndpoint
+            // Enrich Company with response from predictChurn
             .map(response -> {
                 boolean expectedChurn = mapper.readValue(response.responseBody, ObjectNode.class).get("churn").asBoolean();
                 return response.triggeringEvent.withExpectedChurn(expectedChurn);
             });
         
         enrichedCompany.map(company -> company.toCSV()).addSink(createS3Sink(parameters));
+        enrichedCompany.map(company -> company.toCSV()).sinkTo(createSinkToKinesis(parameters));
         env.execute();
     }
 

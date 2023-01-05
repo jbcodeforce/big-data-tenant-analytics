@@ -96,19 +96,31 @@ The following figure illustrates what we are deploying:
 
 ![](./diagrams/eks-saas-deploy.drawio.png)
 
+* One VPC with 2 Availability zones and one public and private subnet per AZ. 
+* EKS cluster defined in private subnet with 2 nodes
+* One namespace to get the core of AnyCompany services (Control plane components)
+* Amazon RDS to persist Tenant data
+
 ### RDS Postgresql database
 
 As a pre-requisite we need one instance of RDS postgresql database. It should have been created with the solution CDK, in `setup/saas-solution-cdk`.
 
-(See python doc)[https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_rds/README.html#starting-an-instance-database]
+[See CDK python doc](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_rds/README.html#starting-an-instance-database)
 
 ### Kubernetes extension for Quarkus
 
-We recommend to read the [Kubernetes Quarkus guide](https://quarkus.io/guides/deploying-to-kubernetes). The Kubernetes extension was added to the `pom.xml` and a `kubernetes.yml` file is create at each build and include deployment, services, service account. To tune this generated file the following declarations were added to the `application.properties`:
+We recommend to read the [Kubernetes Quarkus guide](https://quarkus.io/guides/deploying-to-kubernetes). The Kubernetes extension was added to the `pom.xml` and a `kubernetes.yml` file is created at each build and includes deployment, services, service account YAML definitions. To tune this generated file the following declarations were added to the `application.properties`:
 
 ```properties
 quarkus.kubernetes.namespace=demo-saas-core
 quarkus.container-image.registry=4....dkr.ecr.us-west-2.amazonaws.com/jbcodeforce/demo-saas-tenant-mgr
 quarkus.container-image.tag=latest
 quarkus.kubernetes.env.secrets=saas-secret
+```
+
+Once EKS cluster is operational, using kubectl can deploy the application:
+
+```sh
+
+kubectl apply -f target/kubernetes/kubernetes.yml
 ```
