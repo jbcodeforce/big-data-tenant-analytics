@@ -51,3 +51,11 @@ You can then execute your native executable with: `./target/tenant-manager-1.0.0
 
 If you want to learn more about building native executables, please consult https://quarkus.io/guides/maven-tooling.
 
+## Running locally with Kubernetes Docker
+
+```sh
+kubectl apply -f src/main/kubernetes/postgresql.yml
+kubectl apply -f src/main/kubernetes/kubernetes.yml
+
+kubectl port-forward svc/tenant-manager 8080
+```

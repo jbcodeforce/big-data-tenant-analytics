@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tenant-config
+  namespace: demo-saas-core
+  labels:
+    app: postgres
+data:
+  APP_VERSION: 0.0.10
+  QUARKUS_DATASOURCE_USERNAME: admin
+  QUARKUS_DATASOURCE_PASSWORD: passw0rd
+  QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/postgresdb
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    app.quarkus.io/commit-id: 4de488e159accda35ee483e7041433138a353f05
+    app.quarkus.io/build-timestamp: 2022-12-28 - 18:28:50 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
+  labels:
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/name: tenant-manager
+  name: tenant-manager
+  namespace: demo-saas-core
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/version: 1.0.0
+      app.kubernetes.io/name: tenant-manager
+  template:
+    metadata:
+      annotations:
+        app.quarkus.io/commit-id: 4de488e159accda35ee483e7041433138a353f05
+        app.quarkus.io/build-timestamp: 2022-12-28 - 18:28:50 +0000
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /q/metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scheme: http
+      labels:
+        app.kubernetes.io/version: 1.0.0
+        app.kubernetes.io/name: tenant-manager
+    spec:
+      containers:
+        - env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          image: jbcodeforce/demo-saas-tenant-mgr:latest
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/live
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: tenant-manager
+          envFrom:
+            - configMapRef:
+                name: tenant-config
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app.quarkus.io/commit-id: 4de488e159accda35ee483e7041433138a353f05
+    app.quarkus.io/build-timestamp: 2022-12-28 - 18:28:50 +0000
+    prometheus.io/scrape: "true"
+    prometheus.io/path: /q/metrics
+    prometheus.io/port: "8080"
+    prometheus.io/scheme: http
+  labels:
+    app.kubernetes.io/name: tenant-manager
+    app.kubernetes.io/version: 1.0.0
+  name: tenant-manager
+  namespace: demo-saas-core
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: tenant-manager
+    app.kubernetes.io/version: 1.0.0
+  type: ClusterIP
