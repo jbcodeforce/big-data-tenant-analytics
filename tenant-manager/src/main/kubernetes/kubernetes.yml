@@ -9,7 +9,7 @@ data:
   APP_VERSION: 0.0.10
   QUARKUS_DATASOURCE_USERNAME: admin
   QUARKUS_DATASOURCE_PASSWORD: passw0rd
-  QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgres:5432/postgresdb
+  QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://mypostgresqserver.cvg0ce9puzst.us-west-2.rds.amazonaws.com:5432/tenantdb
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -64,6 +64,7 @@ spec:
             successThreshold: 1
             timeoutSeconds: 10
           name: tenant-manager
+          serviceAccount: tenant-sa
           envFrom:
             - configMapRef:
                 name: tenant-config
@@ -107,3 +108,13 @@ spec:
     app.kubernetes.io/name: tenant-manager
     app.kubernetes.io/version: 1.0.0
   type: ClusterIP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: demo-saas-core
+  labels:
+    app.kubernetes.io/name: tenant-sa
+    app.kubernetes.io/version: 1.0.0
+  name: tenant-sa
